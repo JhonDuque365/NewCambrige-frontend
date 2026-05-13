@@ -5,7 +5,8 @@ import {
 } from "react-router-dom";
 
 import LoginPage from "../modules/auth/LoginPage";
-
+import TesoreriaPage from "../modules/tesoreria/main";
+import MatriculaTable from "../modules/tesoreria/MatriculaTable";
 import Dashboard from "../modules/dashboard/DashboardPage";
 
 // ==============================
@@ -96,7 +97,25 @@ const AppRouter = () => {
         }
       />
       */}
-
+      {
+        <Route
+          path="/tesoreria/*"
+          element={
+            <PrivateRoute>
+              <TesoreriaPage />
+            </PrivateRoute>
+          }
+        />
+      }
+  {      <Route
+          path="/matricula"
+          element={
+            <PrivateRoute>
+              <MatriculaTable />
+            </PrivateRoute>
+          }
+        />
+      }
       {/* ===================== */}
       {/* CATCH ALL */}
       {/* ===================== */}
