@@ -27,7 +27,7 @@ const Dashboard = () => {
       <main className="flex-1 overflow-y-auto bg-gray-50">
 
         {/* Contenido de Tarjetas */}
-        <section className="flex-1 flex justify-center items-center gap-20 p-12 relative">
+        <section className="h-full w-full flex justify-center items-center gap-20 py-24 relative">
           {categories.map((item, index) => (
             <div key={index} className="relative group scale-110" onClick={() => item.title === 'Matrícula' && navigate('/tesoreria/matricula')}>
               {/* Sombra proyectada vinotinto (Efecto exacto) */}
