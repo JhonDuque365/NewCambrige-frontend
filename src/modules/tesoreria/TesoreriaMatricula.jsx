@@ -5,7 +5,7 @@ import React, { useState, useEffect } from 'react';
 import { allestudiantesRequest } from '../../api/endpoints'; 
 import '../../index.css'; 
 import TesoreriaSidebar from './TesoreriaSidebar';
-import Header from './headerTesoreria';
+import Header from './TesoreriaHeader';
 
 const MatriculaTable = () => {
   const [estudiantes, setEstudiantes] = useState([]);

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import Header from './headerTesoreria';
+import Header from './TesoreriaHeader';
 import TesoreriaSidebar from './TesoreriaSidebar';
 import MatriculaLogo from '../../assets/Tesoreria/matricula.svg';
 import PensionLogo from '../../assets/Tesoreria/pension.svg';
@@ -10,9 +10,9 @@ import PapeleriaLogo from '../../assets/Tesoreria/papeleria.svg';
 const Dashboard = () => {
     const navigate = useNavigate();
   const categories = [
-    { title: 'Matrícula', icon: <img src={MatriculaLogo} alt="Matrícula" className="w-16 h-16" /> },
-    { title: 'Pensión', icon: <img src={PensionLogo} alt="Pensión" className="w-16 h-16" /> },
-    { title: 'Papelería', icon: <img src={PapeleriaLogo} alt="Papelería" className="w-16 h-16" /> },
+    { title: 'Matrícula', icon: <img src={MatriculaLogo} alt="Matrícula" className="w-16 h-16" />, path: "/tesoreria/matricula" },
+    { title: 'Pensión', icon: <img src={PensionLogo} alt="Pensión" className="w-16 h-16" />, path: "/tesoreria/pension" },
+    { title: 'Papelería', icon: <img src={PapeleriaLogo} alt="Papelería" className="w-16 h-16" />, path: "/tesoreria/papeleria" },
   ];
 
   return (
@@ -29,7 +29,7 @@ const Dashboard = () => {
         {/* Contenido de Tarjetas */}
         <section className="h-full w-full flex justify-center items-center gap-20 py-24 relative">
           {categories.map((item, index) => (
-            <div key={index} className="relative group scale-110" onClick={() => item.title === 'Matrícula' && navigate('/tesoreria/matricula')}>
+            <div key={index} className="relative group scale-110" onClick={ () => navigate(item.path)}>
               {/* Sombra proyectada vinotinto (Efecto exacto) */}
               <div className="absolute top-4 left-4 w-56 h-72 bg-vinotinto rounded-2xl shadow-lg transition-transform group-hover:translate-x-1 group-hover:translate-y-1"></div>
               

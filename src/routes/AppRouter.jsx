@@ -5,9 +5,13 @@ import {
 } from "react-router-dom";
 
 import LoginPage from "../modules/auth/LoginPage";
-import TesoreriaPage from "../modules/tesoreria/main";
-import MatriculaTable from "../modules/tesoreria/MatriculaTable";
+import TesoreriaPage from "../modules/tesoreria/TesoreriaMainPage";
+import TesoreriaMatricula from "../modules/tesoreria/TesoreriaMatricula";
 import Dashboard from "../modules/dashboard/DashboardPage";
+import TesoreriaNotificaciones from "../modules/tesoreria/TesoreriaNotificaciones";
+import TesoreriaEstadistica from "../modules/tesoreria/TesoreriaEstadistica";
+import TesoreriaPension from "../modules/tesoreria/TesoreriaPension";
+import TesoreriaPapeleria from "../modules/tesoreria/TesoreriaPapeleria";
 
 // ==============================
 // RUTA PRIVADA
@@ -111,10 +115,42 @@ const AppRouter = () => {
           path="/tesoreria/matricula"
           element={
             <PrivateRoute>
-              <MatriculaTable />
+              <TesoreriaMatricula />
             </PrivateRoute>
           }
         />
+}
+{
+        <Route 
+        path="/tesoreria/notificaciones" 
+        element={
+        <PrivateRoute>
+          <TesoreriaNotificaciones />
+          </PrivateRoute>} />
+      }
+      {
+        <Route 
+        path="/tesoreria/estadisticas" 
+        element={
+        <PrivateRoute>
+          <TesoreriaEstadistica />
+          </PrivateRoute>} />
+      }
+      {
+        <Route 
+        path="/tesoreria/pension" 
+        element={
+        <PrivateRoute>
+          <TesoreriaPension />
+          </PrivateRoute>} />
+      }
+      {
+        <Route 
+        path="/tesoreria/papeleria" 
+        element={
+        <PrivateRoute>
+          <TesoreriaPapeleria />
+          </PrivateRoute>} />
       }
       {/* ===================== */}
       {/* CATCH ALL */}

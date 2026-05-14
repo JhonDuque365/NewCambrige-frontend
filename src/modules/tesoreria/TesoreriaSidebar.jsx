@@ -9,12 +9,25 @@ import { useState, useEffect } from 'react';
 
 
 const Sidebar = () => {
+  const menuOptions = {
+  home: { label: 'Inicio', path: '/tesoreria', icon: Home  },
+  estadisticas: { label: 'Estadísticas', path: '/tesoreria/estadisticas', icon: ''},
+  notificaciones: { label: 'Notificaciones', path: '/tesoreria/notificaciones', icon: '' }
+  };
+  const routesConfig = {
+  '/tesoreria': ['home', 'notificaciones'],
+  '/tesoreria/matricula': ['home', 'estadisticas'],
+  '/tesoreria/notificaciones': ['home']
+};
+
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const userName = user?.nombre || "Usuario";
   const idUser = user?.id_usuario;
   const [rolNombre, setRolNombre] = useState("Cargando...");
   const rol = rolNombre[0]|| "Rol Desconocido";
+  const currentButtons = routesConfig[location.pathname] || ['home']; 
+
 
   useEffect(() => {
   const obtenerRoles = async () => {
@@ -38,21 +51,20 @@ const Sidebar = () => {
         
 
         {/* Navegación */}
-        <nav className="w-full space-y-2">
-          <button 
-            onClick={() => navigate('/tesoreria')}
-            className="flex items-center space-x-4 text-vinotinto font-bold w-full p-3 hover:bg-white/40 rounded-lg transition-all group"
-          >
-           
-            <span className="flex items-center justify-center w-4 h-4"><img src={Home} alt="Inicio"/></span>
-            <span className="text-lg">Inicio</span>
-          </button>
-          
-          <button className="flex items-center space-x-4 text-gray-500 w-full p-3 hover:bg-white/40 rounded-lg transition-all group opacity-60">
-            
-            <span className="w-4 h-4 flex items-center justify-center"></span>
-            <span className="text-lg">Estadísticas</span>
-          </button>
+       <nav className="w-full space-y-2">
+          {currentButtons.map((key) => {
+            const item = menuOptions[key];
+            return (
+              <button 
+                key={key}
+                onClick={() => navigate(item.path)}
+                className="flex items-center space-x-4 text-vinotinto font-bold w-full p-3 hover:bg-white/40 rounded-lg transition-all"
+              >
+                {item.icon && <span className="w-6 h-6"><img src={item.icon} alt={item.label} /></span>}
+                <span className="text-lg">{item.label}</span>
+              </button>
+            );
+          })}
         </nav>
       </div>
     <div className="flex-grow"></div>
