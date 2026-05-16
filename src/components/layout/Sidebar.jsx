@@ -36,6 +36,7 @@ export default function Sidebar({
 }) {
   const navigate   = useNavigate();
   const location   = useLocation();
+  
 
   return (
     <aside className="sidebar">
@@ -46,7 +47,7 @@ export default function Sidebar({
         {/* INICIO */}
         <button
           className="sidebar-inicio"
-          onClick={() => navigate("/")}
+          onClick={() => navigate("/dashboard")}
         >
           Inicio
         </button>
@@ -98,6 +99,7 @@ export default function Sidebar({
           className="sidebar-logout"
           onClick={onLogout}
           title="Cerrar sesión"
+
         >
           ⇥
         </button>

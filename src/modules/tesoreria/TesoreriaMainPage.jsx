@@ -1,10 +1,19 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import Header from './TesoreriaHeader';
-import TesoreriaSidebar from './TesoreriaSidebar';
+
+
 import MatriculaLogo from '../../assets/Tesoreria/matricula.svg';
 import PensionLogo from '../../assets/Tesoreria/pension.svg';
 import PapeleriaLogo from '../../assets/Tesoreria/papeleria.svg';
+
+
+import Header        from "../../components/layout/Header";
+import ModuleLayout  from "../../components/layout/ModuleLayout";
+import Sidebar       from "../../components/layout/Sidebar";
+import SearchBar     from "../../components/shared/SearchBar";
+import DataTable     from "../../components/shared/DataTable";
+import ActionButtons from "../../components/shared/ActionButtons";
+import Modal         from "../../components/shared/Modal";
 
 
 const Dashboard = () => {
@@ -16,15 +25,22 @@ const Dashboard = () => {
   ];
 
   return (
-    <div className="flex flex-col h-screen w-full bg-white overflow-hidden font-sans">
+ <div>
   
   <Header />
 
   
-  <div className="flex flex-1 overflow-hidden">
-   
-    <TesoreriaSidebar />
-      <main className="flex-1 overflow-y-auto bg-gray-50">
+
+   <ModuleLayout
+    sidebar={<Sidebar 
+       moduloActual="Tesorería"
+            modulos={[
+              { label: "Notificaciones",    path: "/tesoreria/notificaciones" },
+            ]}
+            usuario={{ nombre: "Juan Pérez", rol: "Titular" }}
+            onLogout={() => console.log("logout")}
+    />}
+      children={<main className="flex-1 overflow-y-auto bg-gray-50">
 
         {/* Contenido de Tarjetas */}
         <section className="h-full w-full flex justify-center items-center gap-20 py-24 relative">
@@ -45,9 +61,11 @@ const Dashboard = () => {
             </div>
           ))}
         </section>
-      </main>
+      </main>}  
+      />
+      
     </div>
-    </div>
+   
   );
 };
 

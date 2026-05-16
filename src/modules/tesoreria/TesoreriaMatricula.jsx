@@ -4,8 +4,15 @@ import React, { useState, useEffect } from 'react';
 import { allestudiantesRequest, allsalonesRequest, allmatriculasRequest } from '../../api/endpoints'; 
 import '../../index.css'; 
 import TesoreriaSidebar from './TesoreriaSidebar';
-import Header from './TesoreriaHeader';
-import TesoreriaFiltro from './TesoreriaFiltro';
+
+
+import Header        from "../../components/layout/Header";
+import ModuleLayout  from "../../components/layout/ModuleLayout";
+import Sidebar       from "../../components/layout/Sidebar";
+import SearchBar     from "../../components/shared/SearchBar";
+import DataTable     from "../../components/shared/DataTable";
+import ActionButtons from "../../components/shared/ActionButtons";
+import Modal         from "../../components/shared/Modal";
 
 
 
@@ -65,20 +72,30 @@ matriculas.forEach(m => {
   }, []);
 
   return (
-    <div className="flex flex-col h-screen w-full bg-white overflow-hidden font-sans">
+    <div >
   
   <Header />
 
   
-  <div className="flex flex-1 overflow-hidden">
-   
-    <TesoreriaSidebar />
+
+<ModuleLayout 
+    sidebar={<Sidebar 
+       moduloActual="Matrícula"
+            modulos={[
+              { label: "Estadisticas",    path: "/tesoreria/estadisticas" },
+            ]}
+    />}
+      
+
+
+/>  
+    
       <main className="flex-1 overflow-y-auto bg-gray-50">
         
       
      
         {/* Filtros Superiores */}
-        <TesoreriaFiltro />
+  
 
         {/* Tabla */}
         <div className="flex-1 p-6 overflow-auto">
@@ -143,7 +160,7 @@ matriculas.forEach(m => {
         </div>
       </main>
     </div>
-    </div>
+   
   );
 };
 
