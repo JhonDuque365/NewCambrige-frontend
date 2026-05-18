@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from "react";
 import { useAuth } from "../../modules/auth/useAuth";
 import { allrolesuserRequest } from '../../api/endpoints';
+import "../../index.css";
 
 import MatriculaLogo from '../../assets/Tesoreria/matricula.svg';
 import PensionLogo from '../../assets/Tesoreria/pension.svg';

@@ -1,11 +1,11 @@
 
 import { useNavigate } from 'react-router-dom';
 import React, { useState, useEffect } from 'react';
-import { allestudiantesRequest, allsalonesRequest, allmatriculasRequest } from '../../api/endpoints'; 
-import '../../index.css'; 
-import TesoreriaSidebar from './TesoreriaSidebar';
+import { allestudiantesRequest, allsalonesRequest, allmatriculasRequest, allrolesuserRequest, crearMatriculaRequest } from '../../api/endpoints'; 
 
 
+import { useAuth } from "../../modules/auth/useAuth";
+import UserIcon from '../../assets/Login/usuario_login.svg';
 import Header        from "../../components/layout/Header";
 import ModuleLayout  from "../../components/layout/ModuleLayout";
 import Sidebar       from "../../components/layout/Sidebar";
@@ -20,9 +20,12 @@ const MatriculaTable = () => {
   const [estudiantes, setEstudiantes] = useState([]);
   const [salones, setSalones] = useState([]);
   const [matriculas, setMatriculas] = useState([]);
-  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
-
+  const rolespermitidos =  ["secretaria", "administrador", "admin", "tesoreria"]
+   //para el sidebar
+  const modulos = [
+    { label: "Estadisticas",    path: "/tesoreria/estadisticas", roles: rolespermitidos },
+  ];
 const salonesMap = {};
 salones.forEach(s => {
   salonesMap[s.id_salon] = s; 
@@ -31,20 +34,66 @@ salones.forEach(s => {
 const matriculasMap = {};
 matriculas.forEach(m => {
   matriculasMap[m.id_estudiante] = m; 
-  console.log("Matricula cargada: ", m);
 });
 
+const { user, logout } = useAuth();
+  const userName = user?.nombre || "Usuario";
+  const idUser = user?.id_usuario;
+  const [roles, setRoles] = useState([]); 
+  const [cargandoRol, setCargandoRol] = useState(true);
+  const rol = roles[0]|| "Rol Desconocido";
+  const [fila,       setFila]       = useState(null);
+  const [modal,      setModal]      = useState(false);
+    const [modal2,      setModal2]      = useState(false);
+  const [formValues, setFormValues] = useState({});
 
-  // Función para obtener los datos
+  const crearMatricula = async () => {
+  if (!fila || !fila.id_estudiante) {
+    console.error("No hay ningún estudiante seleccionado.");
+    return;
+  }
+
+  try {
+    // Pasamos el objeto limpio con los nombres que espera tu FastAPI
+    await crearMatriculaRequest({
+      estudiante_id: Number(fila.id_estudiante),
+      periodo_id: 5
+    });
+    cargarMatriculas();
+    setFila(null); 
+  } catch (error) {
+    console.error("Error al crear la matrícula:", error);
+  }
+};
+
+  useEffect(() => {
+  const obtenerRoles = async () => {
+    if (!idUser) return;
+    
+    try {
+      setCargandoRol(true);
+      const response = await allrolesuserRequest(idUser);
+      
+      setRoles(response?.data || []); 
+    } catch (error) {
+      console.error("Error al obtener el rol:", error);
+      setRoles([]);
+    } finally {
+      setCargandoRol(false);
+    }
+  };
+  
+  obtenerRoles();
+}, [idUser]);
+
+
   const cargarEstudiantes = async () => {
     try {
       const res = await allestudiantesRequest();
-      setEstudiantes(res.data); // Guardamos los datos que vienen de FastAPI
+      setEstudiantes(res.data); 
     } catch (error) {
       console.error("Error cargando estudiantes:", error);
-    } finally {
-      setLoading(false);
-    }
+    } 
   };
 
   const cargarSalones = async () => {
@@ -81,84 +130,95 @@ matriculas.forEach(m => {
 <ModuleLayout 
     sidebar={<Sidebar 
        moduloActual="Matrícula"
-            modulos={[
-              { label: "Estadisticas",    path: "/tesoreria/estadisticas" },
-            ]}
+            modulos={modulos.filter(item => item && Array.isArray(item.roles) && roles.some(rol => item.roles.includes(rol)))}
+            userIcon={user?.icon || UserIcon}
+            usuario={{ nombre: userName, rol: rol }}
+            onLogout={logout}
     />}
-      
+      actions={
+                <ActionButtons
+                  filaSeleccionada={fila}
+                  botones={[
+                    { label: "Validar Pago",  onClick: () => { fila.pago === 'Pagado' ? setModal2(true) : setModal2(true); }, siempreActivo: false  , variante: "primary" }
+                  ]}
+                />
+              }
+>  
+{roles.some(rol => rolespermitidos.includes(rol)) ? (
+  <div>
+             <SearchBar
+                      fields={[
+                        { key: "documento", label: "Código",          type: "text" },
+                        { key: "nombre",    label: "Nombre",type: "text" },
+                        { key: "Grado",   label: "Grado",         type: "select", options: [] },
+                        { key: "Grupo",   label: "Grupo",         type: "select", options: [] },
+                        { key: "Periodo",   label: "Periodo",         type: "select", options: [] },
+                      ]}
+                      onSearch={(f) => console.log(f)}
+                    />
 
-
-/>  
+                    <DataTable
+                              columns={[
+                                { key: "documento", label: "Documento" },
+                                { key: "nombre",   label: "Nombre" },
+                                { key: "grado",    label: "Grado",
+                                  render: (_,val) => (
+                                    <span>{salonesMap[val.id_salon]?.grado}</span>
+                                  )
+                                 },
+                                { key: "grupo", label: "Grupo", 
+                                  render: (_,val) => {
+        
+                                    return(
+                                    <span>{salonesMap[val.id_salon]?.grupo}</span>)
+                                  }
+                                },
+                                { key: "pago", label: "Pago",
+                                  render: (_,val) => {
+                                    const idEst = val.id_estudiante;
+                                    return(
+                                    <span className={matriculasMap[idEst]?.estado ? "badge--ok" : "badge--no"}>
+                                      {matriculasMap[idEst]?.estado ? "Pagado" : "Pendiente"}
+                                    </span>)
+                                  }
+                                },
+                                { key: "fecha_pago", label: "Fecha de Pago",
+                                  render: (_,val) => {
+                                    const idEst = val.id_estudiante;
+                                    return(
+                                    <span>{matriculasMap[idEst]?.created_at ? new Date(matriculasMap[idEst].created_at).toLocaleDateString() : "---"}</span>
+                                  )
+                                 }}
+                              ]}
+                              rows={estudiantes} 
+                              
+                              onRowClick={(f) => setFila(f)}
+                            />
+                            </div>
+                           ) : (<div className="text-gray-400 italic text-center">
+          Tu usuario no tiene permisos para acceder a este módulo.
+        </div>) }
+                    </ModuleLayout>
+            
     
-      <main className="flex-1 overflow-y-auto bg-gray-50">
+                             
+
+  <Modal
+  title={`¿Confirmas que el estudiante ${fila?.nombre || ""} ha realizado el pago?`}
+  isOpen={modal}
+  onAccept={() => { crearMatricula(); setModal(false); }}
+  onCancel={() => setModal(false)}
+/>
+<Modal
+  title={`El estudiante ${fila?.nombre || ""} ya ha realizado el pago`}
+  isOpen={modal2}
+  onAccept={() => { setModal2(false); }}
+  onCancel={() => setModal2(false)}
+/>
         
       
      
-        {/* Filtros Superiores */}
-  
 
-        {/* Tabla */}
-        <div className="flex-1 p-6 overflow-auto">
-          <table className="w-full border-collapse border border-gray-300">
-            <thead>
-              <tr className="bg-[#E9E9E7] text-gray-700 text-xs uppercase tracking-wider">
-                <th className="border border-gray-300 p-2 w-12"></th>
-                <th className="border border-gray-300 p-2 w-24">Código</th>
-                <th className="border border-gray-300 p-2">Nombre Completo</th>
-                <th className="border border-gray-300 p-2 w-20">Grado</th>
-                <th className="border border-gray-300 p-2 w-20">Grupo</th>
-                <th className="border border-gray-300 p-2 w-20">Pago</th>
-                <th className="border border-gray-300 p-2 w-32">Fecha de Pago</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white">
-  {loading ? (
-    <tr>
-      <td colSpan="6" className="text-center p-10 text-gray-400 italic">
-        Cargando datos de estudiantes...
-      </td>
-    </tr>
-  ) : estudiantes.length > 0 ? (
-    estudiantes.map((est, index) => (
-      <tr key={est.id || index} className="hover:bg-gray-50 transition-colors">
-        <td className="border border-gray-300 p-2 text-center">
-          <input type="checkbox" />
-        </td>
-        <td className="border border-gray-300 p-2 text-center text-sm">{est.documento}</td>
-        <td className="border border-gray-300 p-2 text-sm px-4">{est.nombre}</td>
-        <td className="border border-gray-300 p-2 text-center text-sm">{salonesMap[est.id_salon]?.grado || 'N/A'}</td>
-        <td className="border border-gray-300 p-2 text-center text-sm">{salonesMap[est.id_salon]?.grupo || 'N/A'}</td>
-        <td className="border border-gray-300 p-2 text-center">
-          <span className={`px-2 py-1 rounded-full text-[10px] font-bold ${matriculasMap[est.id_estudiante]?.estado ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-            {matriculasMap[est.id_estudiante]?.estado ? matriculasMap[est.id_estudiante]?.estado : 'PENDIENTE'}
-          </span>
-        </td>
-<td className="border border-gray-300 p-2 text-center text-sm text-gray-500">
-  {matriculasMap[est.id_estudiante]?.created_at 
-    ? matriculasMap[est.id_estudiante].created_at.split('T')[0] 
-    : '---'}
-</td>
-      </tr>
-    ))
-  ) : (
-    <tr>
-      <td colSpan="6" className="text-center p-10 text-gray-400">
-        No se encontraron estudiantes.
-      </td>
-    </tr>
-  )}
-</tbody>
-          </table>
-        </div>
-
-        {/* Botón Inferior */}
-        <div className="p-6 flex justify-end">
-          <button className="bg-[#2B4C7E] text-white px-8 py-3 rounded-2xl shadow-lg font-bold flex items-center gap-2 hover:bg-[#1A3A63] transition-all">
-            Validar Pago
-            <span className="text-xl">⇄</span>
-          </button>
-        </div>
-      </main>
     </div>
    
   );
