@@ -1,109 +1,65 @@
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { LogOut, UserCircle2 } from "lucide-react";
+import { useAuth } from "../../api/useAuth";
 import "./Sidebar.css";
 
-/**
- * Sidebar — columna izquierda reutilizable para todos los módulos
- *
- * Props:
- *  moduloActual {String}   — título del módulo donde estamos ej: "Inventario Libros"
- *  modulos      {Array}    — links de otros módulos disponibles
- *                { label, path }
- *  usuario      {Object}   — { nombre, rol }
- *  userIcon     {String}   — import del ícono de usuario (lo agrega cada página)
- *  onLogout     {Function} — cierra sesión
- *
- * Ejemplo de uso:
- *  import userIcon from "../../assets/Icons/user.svg";
- *
- *  <Sidebar
- *    moduloActual="Inventario Libros"
- *    modulos={[
- *      { label: "Uniformes",     path: "/uniformes" },
- *      { label: "Instrumentos",  path: "/instrumentos" },
- *    ]}
- *    usuario={{ nombre: "Juan Pérez", rol: "Titular" }}
- *    userIcon={userIcon}
- *    onLogout={handleLogout}
- *  />
- */
-
 export default function Sidebar({
-  moduloActual = "",
-  modulos = [],
-  usuario = {},
-  userIcon,
-  onLogout,
+  menuItems = [],
+  selectedMenu,
+  setSelectedMenu,
+  user: propUser,
 }) {
-  const navigate   = useNavigate();
-  const location   = useLocation();
+  const navigate = useNavigate();
+  const { user: authUser, logout } = useAuth();
+  const user = propUser || authUser;
+
+  const handleNavigation = (item, e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setSelectedMenu(item);
+
+    //este switch se quita cuando haya navegacion OJO
+
+    switch (item) {
+      
+    }
+
+    //y se pone lo de abajo 
+
+    // // Genera la ruta: convierte a minúsculas, reemplaza espacios por guiones
+    // const path = `/home/${item.toLowerCase().replace(/\s+/g, '-')}`;
+    // navigate(path);
+  };
+
+  const handleLogout = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    logout();
+  };
 
   return (
     <aside className="sidebar">
-
-      {/* ── ZONA SUPERIOR ── */}
-      <div className="sidebar-top">
-
-        {/* INICIO */}
-        <button
-          className="sidebar-inicio"
-          onClick={() => navigate("/")}
-        >
-          Inicio
-        </button>
-
-        {/* TÍTULO MÓDULO ACTUAL */}
-        {moduloActual && (
-          <div className="sidebar-modulo-actual">
-            <span>{moduloActual}</span>
-          </div>
-        )}
-
-        {/* LINKS OTROS MÓDULOS */}
-        {modulos.length > 0 && (
-          <nav className="sidebar-nav">
-            {modulos.map((mod) => (
-              <button
-                key={mod.path}
-                className={`sidebar-link ${location.pathname.startsWith(mod.path) ? "sidebar-link--active" : ""}`}
-                onClick={() => navigate(mod.path)}
-              >
-                {mod.label}
-              </button>
-            ))}
-          </nav>
-        )}
-
-      </div>
-
-      {/* ── ZONA INFERIOR — USUARIO ── */}
+      <nav className="sidebar-menu">
+        {menuItems.map((item) => (
+          <button
+            type="button"
+            key={item}
+            className={`menu-item ${selectedMenu === item ? "active" : ""}`}
+            onClick={(e) => handleNavigation(item, e)}
+          >
+            {item}
+          </button>
+        ))}
+      </nav>
       <div className="sidebar-user">
-
-        {userIcon && (
-          <img
-            src={userIcon}
-            alt="Usuario"
-            className="sidebar-user-icon"
-          />
-        )}
-
-        <p className="sidebar-user-rol">
-          {usuario.rol?.toUpperCase()}
-        </p>
-
-        <p className="sidebar-user-nombre">
-          {usuario.nombre}
-        </p>
-
-        <button
-          className="sidebar-logout"
-          onClick={onLogout}
-          title="Cerrar sesión"
-        >
-          ⇥
+        <UserCircle2 size={100} />
+        <span className="titular-label">TITULAR</span>
+        <h3>{user?.nombre ?? "Nombre usuario"}</h3>
+        <p>{user?.correo}</p>
+        <button type="button" className="logout-button" onClick={handleLogout}>
+          <LogOut size={30} />
         </button>
-
       </div>
-
     </aside>
   );
 }
