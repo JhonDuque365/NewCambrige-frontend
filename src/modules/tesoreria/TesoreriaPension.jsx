@@ -46,7 +46,7 @@ const TesoreriaPension = () => {
     const [fila,       setFila]       = useState(null);
     const [modal,      setModal]      = useState(false);
     const [modal2,      setModal2]      = useState(false);
-   
+   const [modalVer,      setModalVer]      = useState(false);
   
     const periodosMap = {};
 periodos.forEach(p => {
@@ -154,7 +154,8 @@ periodos.forEach(p => {
                     <ActionButtons
                       filaSeleccionada={fila}
                       botones={[
-                        { label: "Validar Pago",  onClick: () => { fila.pago === 'Pagado' ? setModal2(true) : setModal2(true); }, siempreActivo: false  , variante: "primary" }
+                        { label: "Validar Pago",  onClick: () => { fila.pago === 'Pagado' ? setModal2(true) : setModal2(true); }, siempreActivo: false  , variante: "primary" },
+                        { label: "Ver",  onClick: () => { setModalVer(true) }, siempreActivo: false  , variante: "secondary" },
                       ]}
                     />
                   }
@@ -268,6 +269,12 @@ periodos.forEach(p => {
       isOpen={modal2}
       onAccept={() => { setModal2(false); }}
       onCancel={() => setModal2(false)}
+    />
+    <Modal
+      title={`El estudiante ${fila?.nombre || ""} ya ha realizado el pago de los meses $.`}
+      isOpen={modalVer}
+      onAccept={() => { setModalVer(false); }}
+      onCancel={() => setModalVer(false)}
     />
             
           
