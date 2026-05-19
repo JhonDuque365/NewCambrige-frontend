@@ -24,10 +24,10 @@ export default function Sidebar({
       
     }
 
-    //y se pone lo de abajo 
+    //y se pone lo de abajo (es solo un planteamiento de redireccion se debe modificar segun sea el caso)
 
     // // Genera la ruta: convierte a minúsculas, reemplaza espacios por guiones
-    // const path = `/home/${item.toLowerCase().replace(/\s+/g, '-')}`;
+    // const path = `/${item.toLowerCase().replace(/\s+/g, '-')}`;
     // navigate(path);
   };
 
