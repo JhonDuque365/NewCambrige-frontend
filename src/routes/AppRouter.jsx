@@ -7,11 +7,11 @@ import {
 import LoginPage from "../modules/auth/LoginPage";
 
 import TesoreriaMatricula from "../modules/tesoreria/TesoreriaMatricula";
-import Dashboard from "../modules/dashboard/DashboardPage";
 import TesoreriaNotificaciones from "../modules/tesoreria/TesoreriaNotificaciones";
 import TesoreriaEstadistica from "../modules/tesoreria/TesoreriaEstadistica";
 import TesoreriaPension from "../modules/tesoreria/TesoreriaPension";
 import TesoreriaPapeleria from "../modules/tesoreria/TesoreriaPapeleria";
+import Tesoreria from "../modules/tesoreria/Tesoreria";
 
 import Home from "../modules/Home/HomePage";
 
@@ -137,6 +137,14 @@ const AppRouter = () => {
         element={
         <PrivateRoute>
           <TesoreriaPension />
+          </PrivateRoute>} />
+      }
+      {
+        <Route 
+        path="/tesoreria/" 
+        element={
+        <PrivateRoute>
+          <Tesoreria />
           </PrivateRoute>} />
       }
       {

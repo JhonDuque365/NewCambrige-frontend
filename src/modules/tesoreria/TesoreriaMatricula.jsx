@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { allestudiantesRequest, allsalonesRequest, allmatriculasRequest, allrolesuserRequest, crearMatriculaRequest, allaniosacademicosRequest } from '../../api/endpoints'; 
 
 
-import { useAuth } from "../../modules/auth/useAuth";
+import { useAuth } from "../../api/useAuth";
 import UserIcon from '../../assets/Login/usuario_login.svg';
 import Header        from "../../components/layout/Header";
 import ModuleLayout  from "../../components/layout/ModuleLayout";
@@ -148,6 +148,12 @@ const { user, logout } = useAuth();
     
   }, []);
 
+  useEffect(() => {
+        const filtroinit = estudiantes.filter(e => periodoMapname[filtros.Periodo] ? salonesMap[e.id_salon]?.id_periodo === periodoMapname[filtros.Periodo]?.id_periodo : true);
+        setEstudiantesFiltrados(filtroinit);
+      }, [estudiantes, matriculas]);
+  
+
 
   const FiltrarEstudiantes = (filtros) => {
     setEstudiantesFiltrados(estudiantes.filter(e => {
@@ -171,15 +177,16 @@ const { user, logout } = useAuth();
     sidebar={<Sidebar 
        moduloActual="Matrícula"
             modulos={modulos.filter(item => item && Array.isArray(item.roles) && roles.some(rol => item.roles.includes(rol)))}
-            userIcon={user?.icon || UserIcon}
-            usuario={{ nombre: userName, rol: rol }}
+            
+            user={{ nombre: userName, rol: rol }}
             onLogout={logout}
     />}
       actions={
                 <ActionButtons
                   filaSeleccionada={fila}
                   botones={[
-                    { label: "Validar Pago",  onClick: () => { matriculasMap[fila?.id_estudiante ] ? setModal2(true) : setModal(true); }, siempreActivo: false  , variante: "primary" }
+                    { label: "Validar Pago",  onClick: () => { matriculasMap[fila?.id_estudiante ] ? setModal2(true) : setModal(true); }, siempreActivo: false  , variante: "primary", disabled: matriculasMap[fila?.id_estudiante]  || !periodoMapname[filtros.Periodo]?.activo || 
+            (fila &&  salonesMap[fila.id_salon]?.id_periodo !== periodoMapname[filtros.Periodo]?.id_periodo)  },
                   ]}
                 />
               }

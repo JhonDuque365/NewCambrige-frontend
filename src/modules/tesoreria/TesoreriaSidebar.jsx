@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Home from '../../assets/logout/inicio.svg';
 import User from '../../assets/Login/usuario_login.svg';
 import Logout from '../../assets/logout/cerrar_sesion.svg';
-import { useAuth } from "../auth/useAuth";
+import { useAuth } from "../../api/useAuth";
 import { allrolesuserRequest } from '../../api/endpoints';
 import { useState, useEffect } from 'react';
 

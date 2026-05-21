@@ -3,7 +3,7 @@ import React, { useState, useEffect, use } from 'react';
 import { allestudiantesRequest, allsalonesRequest, allmatriculasRequest, allrolesuserRequest, allaniosacademicosRequest } from '../../api/endpoints'; 
 
 
-import { useAuth } from "../../modules/auth/useAuth";
+import { useAuth } from "../../api/useAuth";
 import UserIcon from '../../assets/Login/usuario_login.svg';
 import Header        from "../../components/layout/Header";
 import ModuleLayout  from "../../components/layout/ModuleLayout";
