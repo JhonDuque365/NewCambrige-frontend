@@ -1,58 +1,89 @@
-// TitularDashboard.jsx — Dashboard del Titular de Salón
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend } from "recharts";
+// TitularDashboard.jsx — Rediseño Vento con switch de gráficas
+import { useState } from "react";
+import {
+  PieChart, Pie, Cell, Tooltip, ResponsiveContainer,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend
+} from "recharts";
+import { BarChart2, PieChart as PieIcon, Home, BookOpen, ClipboardList, Library, CheckCircle, AlertCircle } from "lucide-react";
 import Header from "../../components/layout/header";
 import Sidebar from "../../components/layout/Sidebar";
 import ModuleLayout from "../../components/layout/ModuleLayout";
 import { useAuth } from "../../api/useAuth";
-import { useState } from "react";
-import { Home, BookOpen, ClipboardList, Library } from "lucide-react";
 import "./Dashboard.css";
 
-// ── DATOS MOCK ──
-const pupitresData = [
-  { name: "Pagados", value: 28 },
-  { name: "Pendientes", value: 7 },
-];
+const C = { cumple: "#2E7D4F", pendiente: "#8E2A25", activo: "#1B3A5C", azul: "#2E5FA7", amarillo: "#A06000" };
 
-const pruebasData = [
-  { name: "Cumple", value: 25 },
-  { name: "Pendiente", value: 10 },
-];
-
-const bibliotecaData = [
-  { name: "Entregados", value: 30 },
-  { name: "Faltantes", value: 5 },
-];
-
-const pazySalvoGrupoData = [
-  { name: "Cumple", value: 22 },
-  { name: "Pendiente", value: 13 },
-];
-
-const COLORS = {
-  cumple:    "#2E7D4F",
-  pendiente: "#8E2A25",
-  activo:    "#1B3A5C",
-  inactivo:  "#C9B99A",
-  azul:      "#2E5FA7",
-};
+const pupitresData   = [{ name: "Pagados",    value: 28 }, { name: "Pendientes", value: 7  }];
+const pruebasData    = [{ name: "Cumple",     value: 25 }, { name: "Pendiente",  value: 10 }];
+const bibliotecaData = [{ name: "Entregados", value: 30 }, { name: "Faltantes",  value: 5  }];
+const pazGrupoData   = [{ name: "Cumple",     value: 22 }, { name: "Pendiente",  value: 13 }];
 
 const RADIAN = Math.PI / 180;
-const renderLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }) => {
-  const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
-  const x = cx + radius * Math.cos(-midAngle * RADIAN);
-  const y = cy + radius * Math.sin(-midAngle * RADIAN);
+const DonutLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }) => {
+  const r = innerRadius + (outerRadius - innerRadius) * 0.55;
   return (
-    <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central"
-      style={{ fontSize: "13px", fontWeight: "bold" }}>
+    <text x={cx + r * Math.cos(-midAngle * RADIAN)} y={cy + r * Math.sin(-midAngle * RADIAN)}
+      fill="white" textAnchor="middle" dominantBaseline="central" style={{ fontSize: 12, fontWeight: 700 }}>
       {`${(percent * 100).toFixed(0)}%`}
     </text>
   );
 };
 
+const CustomTooltip = ({ active, payload, label }) => {
+  if (!active || !payload?.length) return null;
+  return (
+    <div style={{ background: "#fff", border: "1px solid #C9B99A", borderRadius: 8, padding: "10px 14px", fontFamily: "Lato", fontSize: 13 }}>
+      {label && <p style={{ fontWeight: 700, marginBottom: 4 }}>{label}</p>}
+      {payload.map((p, i) => <p key={i} style={{ color: p.color, margin: "2px 0" }}>{p.name}: <strong>{p.value}</strong></p>)}
+    </div>
+  );
+};
+
+const ChartSwitch = ({ value, onChange }) => (
+  <div className="chart-switch">
+    <button className={`chart-switch-btn ${value === "bar" ? "active" : ""}`} onClick={() => onChange("bar")}>
+      <BarChart2 size={13} /> Barras
+    </button>
+    <button className={`chart-switch-btn ${value === "donut" ? "active" : ""}`} onClick={() => onChange("donut")}>
+      <PieIcon size={13} /> Dona
+    </button>
+  </div>
+);
+
+const MiniChart = ({ type, data, colors, height = 240 }) => (
+  type === "bar" ? (
+    <ResponsiveContainer width="100%" height={height}>
+      <BarChart data={data} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
+        <CartesianGrid strokeDasharray="3 3" stroke="#EDE8DC" />
+        <XAxis dataKey="name" tick={{ fontSize: 12, fontFamily: "Lato" }} />
+        <YAxis tick={{ fontSize: 12, fontFamily: "Lato" }} />
+        <Tooltip content={<CustomTooltip />} />
+        <Bar dataKey="value" name="Estudiantes" radius={[5,5,0,0]}>
+          {data.map((_, i) => <Cell key={i} fill={colors[i]} />)}
+        </Bar>
+      </BarChart>
+    </ResponsiveContainer>
+  ) : (
+    <ResponsiveContainer width="100%" height={height}>
+      <PieChart>
+        <Pie data={data} cx="50%" cy="50%" outerRadius={90} innerRadius={48}
+          dataKey="value" labelLine={false} label={DonutLabel}>
+          {data.map((_, i) => <Cell key={i} fill={colors[i]} />)}
+        </Pie>
+        <Tooltip formatter={(v, n) => [`${v}`, n]} />
+      </PieChart>
+    </ResponsiveContainer>
+  )
+);
+
 const TitularDashboard = () => {
   const { user, logout } = useAuth();
   const [selectedMenu, setSelectedMenu] = useState("Dashboard");
+  const [sw, setSw] = useState({ paz: "bar", pupitres: "bar", pruebas: "bar", biblioteca: "bar" });
+  const toggle = (key, val) => setSw(p => ({ ...p, [key]: val }));
+
+  const grupo = user?.grupo ?? "Sexto A";
+  const anio  = user?.anio  ?? "2025–2026";
 
   const menuItems = [
     { label: "Dashboard",  icon: <Home /> },
@@ -61,127 +92,75 @@ const TitularDashboard = () => {
     { label: "Biblioteca", icon: <Library /> },
   ];
 
-  // contexto del grupo — vendrá del JWT
-  const grupo = user?.grupo ?? "Sexto A";
-  const anio  = user?.anio  ?? "2025-2026";
-
   return (
     <div className="dashboard-page">
       <Header title="SISTEMA DE PAZ Y SALVO - NEW CAMBRIDGE SCHOOL" />
       <div className="dashboard-body">
-        <ModuleLayout
-          sidebar={
-            <Sidebar menuItems={menuItems} selectedMenu={selectedMenu}
-              setSelectedMenu={setSelectedMenu} user={user} logout={logout} />
-          }
-        >
+        <ModuleLayout sidebar={
+          <Sidebar menuItems={menuItems} selectedMenu={selectedMenu}
+            setSelectedMenu={setSelectedMenu} user={user} logout={logout} />
+        }>
           <div className="dashboard-content">
 
-            {/* ── CONTEXTO ── */}
-            <div style={{ marginBottom: "var(--space-5)", padding: "var(--space-3) var(--space-4)", background: "var(--color-info-bg)", borderRadius: "var(--radius-md)", fontFamily: "var(--font-body)", fontSize: "var(--text-sm)", color: "var(--color-info)" }}>
-              📚 Grupo activo: <strong>{grupo}</strong> · Año escolar: <strong>{anio}</strong>
+            <div className="dash-welcome">
+              <div className="dash-welcome-text">
+                <h1>Dashboard — Titular</h1>
+                <p>Vista general de tu grupo asignado</p>
+              </div>
+              <span className="dash-welcome-badge">Titular</span>
             </div>
 
-            {/* ── KPIs ── */}
+            <div className="dash-context-banner">
+              📚 Grupo activo: <strong>{grupo}</strong> &nbsp;·&nbsp; Año escolar: <strong>{anio}</strong>
+            </div>
+
+            {/* KPIs */}
             <div className="kpi-grid">
-              <div className="kpi-card" style={{ "--kpi-color": COLORS.activo }}>
-                <span className="kpi-card-value">35</span>
-                <span className="kpi-card-label">Total estudiantes</span>
-              </div>
-              <div className="kpi-card" style={{ "--kpi-color": COLORS.cumple }}>
-                <span className="kpi-card-value">22</span>
-                <span className="kpi-card-label">Paz y salvo al día</span>
-              </div>
-              <div className="kpi-card" style={{ "--kpi-color": COLORS.pendiente }}>
-                <span className="kpi-card-value">13</span>
-                <span className="kpi-card-label">Con pendientes</span>
-              </div>
-              <div className="kpi-card" style={{ "--kpi-color": COLORS.azul }}>
-                <span className="kpi-card-value">63%</span>
-                <span className="kpi-card-label">% al día</span>
-              </div>
+              {[
+                { label: "Total estudiantes",  value: 35,   color: C.activo,    icon: <CheckCircle size={18} /> },
+                { label: "Paz y salvo al día", value: 22,   color: C.cumple,    icon: <CheckCircle size={18} />, delta: "63%" },
+                { label: "Con pendientes",      value: 13,   color: C.pendiente, icon: <AlertCircle size={18} /> },
+                { label: "Pupitres pagados",   value: "28/35", color: C.azul,   icon: <ClipboardList size={18} /> },
+              ].map((k, i) => (
+                <div key={i} className="kpi-card" style={{ "--kpi-color": k.color }}>
+                  <div className="kpi-card-header">
+                    <div className="kpi-card-icon">{k.icon}</div>
+                    {k.delta && <span className="kpi-card-delta kpi-delta-up">{k.delta}</span>}
+                  </div>
+                  <div className="kpi-card-value">{k.value}</div>
+                  <div className="kpi-card-label">{k.label}</div>
+                </div>
+              ))}
             </div>
 
-            {/* ── GRÁFICAS ── */}
+            {/* Gráficas */}
             <div className="dash-section">
-              <h2 className="dash-section-title">Estado del Grupo — {grupo}</h2>
+              <div className="dash-section-header">
+                <h2 className="dash-section-title">Estado del Grupo — {grupo}</h2>
+              </div>
               <div className="charts-grid">
 
-                <div className="chart-card">
-                  <h3 className="chart-card-title">Paz y Salvo General del Grupo</h3>
-                  <ResponsiveContainer width="100%" height={260}>
-                    <PieChart>
-                      <Pie data={pazySalvoGrupoData} cx="50%" cy="50%"
-                        outerRadius={100} innerRadius={55}
-                        dataKey="value" labelLine={false} label={renderLabel}>
-                        <Cell fill={COLORS.cumple} />
-                        <Cell fill={COLORS.pendiente} />
-                      </Pie>
-                      <Tooltip formatter={(v) => `${v} estudiantes`} />
-                    </PieChart>
-                  </ResponsiveContainer>
-                  <div className="custom-legend">
-                    <span className="legend-item"><span className="legend-dot" style={{ background: COLORS.cumple }} />Cumple ({pazySalvoGrupoData[0].value})</span>
-                    <span className="legend-item"><span className="legend-dot" style={{ background: COLORS.pendiente }} />Pendiente ({pazySalvoGrupoData[1].value})</span>
+                {[{key:"paz", title:"Paz y Salvo General", data:pazGrupoData,   colors:[C.cumple, C.pendiente]},
+                  {key:"pupitres", title:"Pupitres",       data:pupitresData,   colors:[C.cumple, C.pendiente]},
+                  {key:"pruebas", title:"Pruebas Inst.",   data:pruebasData,    colors:[C.azul, C.pendiente]},
+                  {key:"biblioteca", title:"Biblioteca",   data:bibliotecaData, colors:[C.cumple, C.amarillo]},
+                ].map(card => (
+                  <div key={card.key} className="chart-card">
+                    <div className="chart-card-header">
+                      <h3 className="chart-card-title">{card.title}</h3>
+                      <ChartSwitch value={sw[card.key]} onChange={v => toggle(card.key, v)} />
+                    </div>
+                    <MiniChart type={sw[card.key]} data={card.data} colors={card.colors} />
+                    <div className="custom-legend">
+                      {card.data.map((d, i) => (
+                        <span key={i} className="legend-item">
+                          <span className="legend-dot" style={{ background: card.colors[i] }} />
+                          {d.name} ({d.value})
+                        </span>
+                      ))}
+                    </div>
                   </div>
-                </div>
-
-                <div className="chart-card">
-                  <h3 className="chart-card-title">Pupitres</h3>
-                  <ResponsiveContainer width="100%" height={260}>
-                    <PieChart>
-                      <Pie data={pupitresData} cx="50%" cy="50%"
-                        outerRadius={100} innerRadius={55}
-                        dataKey="value" labelLine={false} label={renderLabel}>
-                        <Cell fill={COLORS.cumple} />
-                        <Cell fill={COLORS.pendiente} />
-                      </Pie>
-                      <Tooltip formatter={(v) => `${v} estudiantes`} />
-                    </PieChart>
-                  </ResponsiveContainer>
-                  <div className="custom-legend">
-                    <span className="legend-item"><span className="legend-dot" style={{ background: COLORS.cumple }} />Pagados ({pupitresData[0].value})</span>
-                    <span className="legend-item"><span className="legend-dot" style={{ background: COLORS.pendiente }} />Pendientes ({pupitresData[1].value})</span>
-                  </div>
-                </div>
-
-                <div className="chart-card">
-                  <h3 className="chart-card-title">Pruebas Institucionales</h3>
-                  <ResponsiveContainer width="100%" height={260}>
-                    <PieChart>
-                      <Pie data={pruebasData} cx="50%" cy="50%"
-                        outerRadius={100} innerRadius={55}
-                        dataKey="value" labelLine={false} label={renderLabel}>
-                        <Cell fill={COLORS.azul} />
-                        <Cell fill={COLORS.pendiente} />
-                      </Pie>
-                      <Tooltip formatter={(v) => `${v} estudiantes`} />
-                    </PieChart>
-                  </ResponsiveContainer>
-                  <div className="custom-legend">
-                    <span className="legend-item"><span className="legend-dot" style={{ background: COLORS.azul }} />Cumple ({pruebasData[0].value})</span>
-                    <span className="legend-item"><span className="legend-dot" style={{ background: COLORS.pendiente }} />Pendiente ({pruebasData[1].value})</span>
-                  </div>
-                </div>
-
-                <div className="chart-card">
-                  <h3 className="chart-card-title">Biblioteca</h3>
-                  <ResponsiveContainer width="100%" height={260}>
-                    <PieChart>
-                      <Pie data={bibliotecaData} cx="50%" cy="50%"
-                        outerRadius={100} innerRadius={55}
-                        dataKey="value" labelLine={false} label={renderLabel}>
-                        <Cell fill={COLORS.cumple} />
-                        <Cell fill="#A06000" />
-                      </Pie>
-                      <Tooltip formatter={(v) => `${v} estudiantes`} />
-                    </PieChart>
-                  </ResponsiveContainer>
-                  <div className="custom-legend">
-                    <span className="legend-item"><span className="legend-dot" style={{ background: COLORS.cumple }} />Entregados ({bibliotecaData[0].value})</span>
-                    <span className="legend-item"><span className="legend-dot" style={{ background: "#A06000" }} />Faltantes ({bibliotecaData[1].value})</span>
-                  </div>
-                </div>
+                ))}
 
               </div>
             </div>
