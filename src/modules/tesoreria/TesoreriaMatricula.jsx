@@ -231,6 +231,7 @@ const MatriculaTable = () => {
                     />
 
                     <DataTable
+                              key={`${filtros.Grado}-${filtros.Grupo}-${filtros.Periodo}-${filtros.nombre}-${filtros.documento}`}
                               columns={[
                                 { key: "documento", label: "Documento" },
                                 { key: "nombre",   label: "Nombre" },
