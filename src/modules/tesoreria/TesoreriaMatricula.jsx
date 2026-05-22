@@ -3,9 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import React, { useState, useEffect } from 'react';
 import { allestudiantesRequest, allsalonesRequest, allmatriculasRequest, allrolesuserRequest, crearMatriculaRequest, allaniosacademicosRequest } from '../../api/endpoints'; 
 
-
+import { Home } from "lucide-react";
 import { useAuth } from "../../api/useAuth";
-import UserIcon from '../../assets/Login/usuario_login.svg';
 import Header        from "../../components/layout/Header";
 import ModuleLayout  from "../../components/layout/ModuleLayout";
 import Sidebar       from "../../components/layout/Sidebar";
@@ -21,31 +20,9 @@ const MatriculaTable = () => {
   const [estudiantesFiltrados, setEstudiantesFiltrados] = useState([]);
   const [salones, setSalones] = useState([]);
   const [matriculas, setMatriculas] = useState([]);
-  const navigate = useNavigate();
   const [periodos, setPeriodos] = useState([]);
   const rolespermitidos =  ["secretaria", "administrador", "admin", "tesoreria"]
-   //para el sidebar
-  const modulos = [
-    { label: "Estadisticas",    path: "/tesoreria/estadisticas", roles: rolespermitidos },
-  ];
-const salonesMap = {};
-salones.forEach(s => {
-  salonesMap[s.id_salon] = s; 
-  
-});
-const matriculasMap = {};
-matriculas.forEach(m => {
-  matriculasMap[m.id_estudiante] = m; 
-});
-const periodosMap = {};
-periodos.forEach(p => {
-  periodosMap[p.id_periodo] = p;
-});
-const periodoMapname = {};
-periodos.forEach(p => {
-  periodoMapname[p.nombre] = p;
-});
-const { user, logout } = useAuth();
+  const { user, logout } = useAuth();
   const userName = user?.nombre || "Usuario";
   const idUser = user?.id_usuario;
   const [roles, setRoles] = useState([]); 
@@ -53,43 +30,62 @@ const { user, logout } = useAuth();
   const rol = roles[0]|| "Rol Desconocido";
   const [fila,       setFila]       = useState(null);
   const [modal,      setModal]      = useState(false);
-  const [modal2,      setModal2]      = useState(false);
+  const [cargandoPeriodos, setCargandoPeriodos] = useState(true);
   const [filtros, setFiltros] = useState({
     documento: "",
     nombre: "",
     Grado: "",
     Grupo: "",
     Periodo: ""
+  }); 
+  //para el sidebar
+  const modulos = [
+    { label: "Inicio", icon: <Home />,    path: "/home" },
+    { label: "Estadisticas",    path: "/tesoreria/estadisticas", roles: rolespermitidos },
+  ];
+  //maps para acceso rápido a datos relacionados
+  const salonesMap = {};
+  salones.forEach(s => {
+    salonesMap[s.id_salon] = s; 
   });
-
+  const matriculasMap = {};
+  matriculas.forEach(m => {
+    matriculasMap[m.id_estudiante] = m; 
+  });
+  const periodosMap = {};
+  periodos.forEach(p => {
+    periodosMap[p.id_periodo] = p;
+  });
+  const periodoMapname = {};
+  periodos.forEach(p => {
+    periodoMapname[p.nombre] = p;
+  });
+  
+  //creación de matrícula
   const crearMatricula = async () => {
   if (!fila || !fila.id_estudiante) {
     console.error("No hay ningún estudiante seleccionado.");
     return;
   }
-
   try {
-    
-    // Pasamos el objeto limpio con los nombres que espera tu FastAPI
     await crearMatriculaRequest({
       estudiante_id: Number(fila.id_estudiante),
-      periodo_id: 5
+      periodo_id: Number(salonesMap[fila.id_salon]?.id_periodo)
     });
     cargarMatriculas();
     setFila(null); 
   } catch (error) {
     console.error("Error al crear la matrícula:", error);
   }
-};
+  };
 
+  //carga de datos iniciales
   useEffect(() => {
   const obtenerRoles = async () => {
     if (!idUser) return;
-    
     try {
       setCargandoRol(true);
       const response = await allrolesuserRequest(idUser);
-      
       setRoles(response?.data || []); 
     } catch (error) {
       console.error("Error al obtener el rol:", error);
@@ -98,10 +94,8 @@ const { user, logout } = useAuth();
       setCargandoRol(false);
     }
   };
-  
   obtenerRoles();
-}, [idUser]);
-
+  }, [idUser]);
 
   const cargarEstudiantes = async () => {
     try {
@@ -130,11 +124,13 @@ const { user, logout } = useAuth();
       console.error("Error cargando matrículas:", error);
     }
   };
+
   const cargarPeriodos = async () => {
     try {
       const res = await allaniosacademicosRequest();
       setPeriodos(res.data);
       setFiltros(prev => ({ ...prev, Periodo: res.data[0]?.nombre || "" }));
+      setCargandoPeriodos(false);
     } catch (error) {
       console.error("Error cargando periodos:", error);
     }
@@ -145,7 +141,6 @@ const { user, logout } = useAuth();
     cargarSalones();
     cargarMatriculas();
     cargarPeriodos();
-    
   }, []);
 
   useEffect(() => {
@@ -153,8 +148,7 @@ const { user, logout } = useAuth();
         setEstudiantesFiltrados(filtroinit);
       }, [estudiantes, matriculas]);
   
-
-
+  //funcion para filtrar estudiantes según criterios de búsqueda
   const FiltrarEstudiantes = (filtros) => {
     setEstudiantesFiltrados(estudiantes.filter(e => {
       const cumpleDocumento = e.documento.toString().includes(filtros.documento);
@@ -162,70 +156,78 @@ const { user, logout } = useAuth();
       const cumpleGrado = filtros.Grado ? ((salonesMap[e.id_salon]?.grado).toString() === filtros.Grado) : true;
       const cumpleGrupo = filtros.Grupo ? (salonesMap[e.id_salon]?.grupo).toString() === filtros.Grupo : true;
       const cumplePeriodo = filtros.Periodo ? periodosMap[salonesMap[e.id_salon]?.id_periodo]?.nombre === filtros.Periodo : true;
+      
       return cumpleDocumento && cumpleNombre && cumpleGrado && cumpleGrupo && cumplePeriodo;
     }));
   };
 
   return (
     <div >
-  
-  <Header />
-
-  
-
-<ModuleLayout 
+    <Header title="SISTEMA DE PAZ Y SALVO - NEW CAMBRIDGE SCHOOL" />
+    <ModuleLayout 
     sidebar={<Sidebar 
        moduloActual="Matrícula"
-            modulos={modulos.filter(item => item && Array.isArray(item.roles) && roles.some(rol => item.roles.includes(rol)))}
-            
+            menuItems={modulos.filter(modulo => {
+                if (!modulo) return false;
+                if (!modulo.roles || !Array.isArray(modulo.roles) || modulo.roles.length === 0) return true;
+                return roles.some(rol => modulo.roles.includes(rol));
+                })}
             user={{ nombre: userName, rol: rol }}
             onLogout={logout}
-    />}
-      actions={
+              />}
+            actions={
                 <ActionButtons
                   filaSeleccionada={fila}
                   botones={[
-                    { label: "Validar Pago",  onClick: () => { matriculasMap[fila?.id_estudiante ] ? setModal2(true) : setModal(true); }, siempreActivo: false  , variante: "primary", disabled: matriculasMap[fila?.id_estudiante]  || !periodoMapname[filtros.Periodo]?.activo || 
-            (fila &&  salonesMap[fila.id_salon]?.id_periodo !== periodoMapname[filtros.Periodo]?.id_periodo)  },
-                  ]}
+                    { label: "Validar Pago",  
+                      onClick: () => {  setModal(true); }, 
+                      siempreActivo: false , variante: "primary", 
+                      disabled: matriculasMap[fila?.id_estudiante]  || !periodoMapname[filtros.Periodo]?.activo || 
+                                (fila &&  salonesMap[fila.id_salon]?.id_periodo !== periodoMapname[filtros.Periodo]?.id_periodo)  },
+                          ]}
                 />
               }
->  
-{roles.some(rol => rolespermitidos.includes(rol)) ? (
-  <div>
+            >  
+            {cargandoRol || cargandoPeriodos ? (
+              <div className="text-gray-400 italic text-center">
+                Cargando Modulo Matricula...
+              </div>
+            ) : (
+            roles.some(rol => rolespermitidos.includes(rol)) ? (
+            <div>
              <SearchBar
-                      fields={[
-                        { key: "documento", label: "Código",          type: "text" },
-                        { key: "nombre",    label: "Nombre",type: "text" },
-                        { key: "Grado",   label: "Grado",         type: "select", 
-                          options: filtros.Periodo ?   Array.from(new Set(Object.values(salonesMap).filter(s => s.id_periodo === periodoMapname[filtros.Periodo]?.id_periodo).map(s => s.grado).filter(Boolean))) : []},
-                        { key: "Grupo",   label: "Grupo",        type: "select", options: filtros.Grado 
-        ? Array.from(new Set(
-            Object.values(salonesMap)
-              .filter(s => (s.grado).toString() === filtros.Grado)
-              .map(s => s.grupo)
-              .filter(Boolean)
-          ))
-        : [] },
-                        { key: "Periodo",   label: "Periodo",         type: "select", options: Array.from(new Set(Object.values(periodos).map(s => s.nombre).filter(Boolean)))},
+                fields={[
+                  { key: "documento", label: "Código", type: "text" },
+                  { key: "nombre",    label: "Nombre",type: "text" },
+                  { key: "Grado",   label: "Grado",         type: "select", 
+                    options: filtros.Periodo ? Array.from(new Set(Object.values(salonesMap)
+                    .filter(s => s.id_periodo === periodoMapname[filtros.Periodo]?.id_periodo)
+                    .map(s => s.grado).filter(Boolean))) : []},
+                  { key: "Grupo",   label: "Grupo",        type: "select", 
+                    options: filtros.Grado ? Array.from(new Set(Object.values(salonesMap)
+                    .filter(s => (s.grado).toString() === filtros.Grado)
+                    .map(s => s.grupo).filter(Boolean))): [] },
+                  { key: "Periodo",   label: "Periodo", type: "select", 
+                    options: Array.from(new Set(Object.values(periodos).map(s => s.nombre).filter(Boolean)))},
                       ]}
                       initialValues={{ Periodo: periodos[0]?.nombre }}
                       onChange={(key, value) => {
-    setFiltros(prev => {
-      const nuevosFiltros = { ...prev, [key]: value };
-      
-      if (key === "Grado") {
-        nuevosFiltros.Grupo = "";
-      }
-      if (key === "Periodo") {
-        nuevosFiltros.Grado = "";
-        nuevosFiltros.Grupo = "";
-      }
-      
-      return nuevosFiltros;
-    });
-  }}
-                      onSearch={(f) =>{  FiltrarEstudiantes(f); setFiltros(f);}}
+                        setFiltros(prev => {
+                        const nuevosFiltros = { ...prev, [key]: value };
+                        if (key === "Grado") {
+                          nuevosFiltros.Grupo = "";
+                        }
+                        if (key === "Periodo") {
+                        nuevosFiltros.Grado = "";
+                        nuevosFiltros.Grupo = "";
+                        }
+                      return nuevosFiltros;
+                      });
+                      }}
+                      onSearch={(f) =>{  FiltrarEstudiantes(f); setFiltros(f); setFila(null); }}
+                      cleanFilter={
+                        { documento: "", nombre: "", Grado: "", Grupo: "", Periodo: filtros.Periodo }
+                      }
                     />
 
                     <DataTable
@@ -263,33 +265,21 @@ const { user, logout } = useAuth();
                                  }}
                               ]}
                               rows={estudiantesFiltrados} 
-                              
                               onRowClick={(f) => setFila(f)}
                             />
                             </div>
-                           ) : (<div className="text-gray-400 italic text-center">
-          Tu usuario no tiene permisos para acceder a este módulo.
-        </div>) }
+                            ) : (
+                            <div className="text-gray-400 italic text-center">
+                            Tu usuario no tiene permisos para acceder a este módulo.
+                           </div>)  )}
                     </ModuleLayout>
-            
-    
-                             
-
-  <Modal
-  title={`¿Confirmas que el estudiante ${fila?.nombre || ""} ha realizado el pago de la matrícula?`}
-  isOpen={modal}
-  onAccept={() => { crearMatricula(); setModal(false); }}
-  onCancel={() => setModal(false)}
-/>
-<Modal
-  title={`El estudiante ${fila?.nombre || ""} ya ha realizado el pago de la matrícula.`}
-  isOpen={modal2}
-  onAccept={() => { setModal2(false); }}
-  onCancel={() => setModal2(false)}
-/>
-        
-
-
+           
+                    <Modal
+                    title={`¿Confirmas que el estudiante ${fila?.nombre || ""} ha realizado el pago de la matrícula?`}
+                    isOpen={modal}
+                    onAccept={() => { crearMatricula(); setModal(false); }}
+                    onCancel={() => setModal(false)}
+                  />
     </div>
    
   );

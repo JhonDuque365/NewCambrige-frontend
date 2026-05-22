@@ -9,7 +9,7 @@ import { Home } from "lucide-react";
 import MatriculaLogo from '../../assets/Tesoreria/matricula.svg';
 import PensionLogo from '../../assets/Tesoreria/pension.svg';
 import PapeleriaLogo from '../../assets/Tesoreria/papeleria.svg';
-import UserIcon from '../../assets/Login/usuario_login.svg';
+
 
 import Header        from "../../components/layout/Header";
 import ModuleLayout  from "../../components/layout/ModuleLayout";
@@ -19,7 +19,6 @@ import Sidebar       from "../../components/layout/Sidebar";
 
 const Tesoreria = () => {
   const navigate = useNavigate();
-  
   //para las tarjetas del dashboard
   const cards = [
     { title: 'Matrícula', icon: MatriculaLogo, path: "/tesoreria/matricula", roles: ["secretaria", "administrador", "admin", "tesoreria"] },
@@ -31,18 +30,17 @@ const Tesoreria = () => {
     { label: "Inicio", icon: <Home />,    path: "/home" },
     { label: "Notificaciones",    path: "/tesoreria/notificaciones", roles: ["secretaria", "administrador", "admin", "tesoreria"] },  
   ];
+  //variables de autenticación y roles
   const { user, logout } = useAuth();
   const userName = user?.nombre || "Usuario";
   const idUser = user?.id_usuario;
   const [roles, setRoles] = useState([]); 
   const [cargandoRol, setCargandoRol] = useState(true);
   const rol = roles[0]|| "Rol Desconocido";
-
-  
+  //obtener roles del usuario
   useEffect(() => {
   const obtenerRoles = async () => {
     if (!idUser) return;
-    
     try {
       setCargandoRol(true);
       const response = await allrolesuserRequest(idUser);
@@ -62,7 +60,6 @@ const Tesoreria = () => {
  
 
   return (
-
   <div className="dashboard-container">
         <Header title="SISTEMA DE PAZ Y SALVO - NEW CAMBRIDGE SCHOOL" />
         <ModuleLayout
@@ -72,8 +69,7 @@ const Tesoreria = () => {
                 if (!modulo) return false;
                 if (!modulo.roles || !Array.isArray(modulo.roles) || modulo.roles.length === 0) return true;
                 return roles.some(rol => modulo.roles.includes(rol));
-    })}
-             
+                })}
               user={{ nombre: userName, rol: rol }}
               logout={logout}
             />
@@ -102,16 +98,15 @@ const Tesoreria = () => {
                   ))}
              </div>   
            ) }
-           { !cargandoRol && cards.filter(item => item && Array.isArray(item.roles) && roles.some(rol => item.roles.includes(rol))).length === 0 && (
+           { !cargandoRol 
+           && cards.filter(item => item && Array.isArray(item.roles) 
+           && roles.some(rol => item.roles.includes(rol))).length === 0 
+           && (
                 <div className="text-gray-400 italic text-center">
                   Tu usuario no tiene módulos asignados.
                 </div>
               )}
-           
-        
-                   
-        
-                    
+             
               </ModuleLayout>
             </div>
    

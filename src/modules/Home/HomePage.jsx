@@ -113,9 +113,7 @@ const HomePage = () => {
         </div>
       )}
 
-           
-
-            
+     
       </ModuleLayout>
     </div>
   );

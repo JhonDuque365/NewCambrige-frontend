@@ -33,7 +33,7 @@ import "./searchBar.css";
  *  />
  */
 
-export default function SearchBar({ fields = [], onSearch, loading = false, initialValues = {}, onChange }) {
+export default function SearchBar({ fields = [], onSearch, loading = false, initialValues = {}, onChange, cleanFilter }) {
 
 const initialState = fields.reduce((acc, f) => {
     acc[f.key] = initialValues[f.key] || "";
@@ -49,7 +49,14 @@ const handleChange = (key, value) => {
 };
 
 const handleSearch = () => {
-    if (onSearch) onSearch(values);
+    if (onSearch){
+        onSearch(values);
+        //limpiar filtros después de la búsqueda
+        if(cleanFilter){
+            setValues(cleanFilter);
+        }
+    }
+         
 };
 
 const handleKeyDown = (e) => {
