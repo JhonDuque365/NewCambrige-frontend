@@ -87,11 +87,12 @@ return (
             </select>
         ) : (
             <input
-            type="text"
+            type={field.type === "number" ? "number" : "text"}
             className="searchbar-input"
             value={values[field.key]}
             onChange={(e) => handleChange(field.key, e.target.value)}
             onKeyDown={handleKeyDown}
+            maxLength={field.maxLength}
             />
         )}
 

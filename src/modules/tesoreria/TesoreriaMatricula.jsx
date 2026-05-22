@@ -197,8 +197,8 @@ const MatriculaTable = () => {
             <div>
              <SearchBar
                 fields={[
-                  { key: "documento", label: "Código", type: "text" },
-                  { key: "nombre",    label: "Nombre",type: "text" },
+                  { key: "documento", label: "Código", type: "number", maxLength:10 },
+                  { key: "nombre",    label: "Nombre",type: "text", maxLength:100 },
                   { key: "Grado",   label: "Grado",         type: "select", 
                     options: filtros.Periodo ? Array.from(new Set(Object.values(salonesMap)
                     .filter(s => s.id_periodo === periodoMapname[filtros.Periodo]?.id_periodo)
