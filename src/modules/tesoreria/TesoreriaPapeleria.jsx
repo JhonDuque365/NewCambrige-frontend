@@ -1,4 +1,4 @@
-import TesoreriaSidebar from './TesoreriaSidebar';
+
 
 
 
@@ -12,7 +12,7 @@ const TesoreriaPapeleria = () => {
   
   <div className="flex flex-1 overflow-hidden">
    
-    <TesoreriaSidebar />
+   
     <h1>Papeleria</h1>
     </div>
     </div>
