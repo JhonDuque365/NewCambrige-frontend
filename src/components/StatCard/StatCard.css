@@ -1,0 +1,42 @@
+.sc-card {
+  background: var(--color-white);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: var(--space-5);
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-4);
+  transition: box-shadow var(--transition-fast), transform var(--transition-fast);
+}
+.sc-card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+.sc-icon {
+  width: 48px; height: 48px;
+  border-radius: var(--radius-md);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+  flex-shrink: 0;
+}
+.sc-body { flex: 1; }
+.sc-label {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  margin: 0 0 2px;
+  font-weight: var(--font-medium);
+  text-transform: uppercase;
+  letter-spacing: var(--letter-wide);
+}
+.sc-value {
+  font-size: var(--text-xl);
+  font-weight: var(--font-bold);
+  color: var(--color-text);
+  margin: 0 0 2px;
+  font-family: var(--font-display);
+}
+.sc-sub {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  margin: 0;
+}
