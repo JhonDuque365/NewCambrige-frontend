@@ -1,4 +1,4 @@
-// AppRouter.jsx — Rutas completas con protección por rol
+// AppRouter.jsx — Rutas completas (PrivateRoute desactivado temporalmente para pruebas locales)
 import { Routes, Route, Navigate } from "react-router-dom";
 
 import LoginPage      from "../modules/auth/LoginPage";
@@ -13,14 +13,15 @@ import RectoriaDashboard from "../modules/dashboard/RectoriaDashboard";
 
 import TestPage from "../modules/test/testPage";
 
-// ── RUTA PRIVADA ──
-const PrivateRoute = ({ children }) => {
-  const token = localStorage.getItem("access_token");
-  if (!token) return <Navigate to="/" replace />;
-  return children;
-};
+// ── RUTA PRIVADA (desactivada temporalmente para pruebas sin backend) ──
+// TODO: reactivar cuando el backend esté listo
+// const PrivateRoute = ({ children }) => {
+//   const token = localStorage.getItem("access_token");
+//   if (!token) return <Navigate to="/" replace />;
+//   return children;
+// };
+const PrivateRoute = ({ children }) => children;
 
-// ── ROUTER PRINCIPAL ──
 const AppRouter = () => {
   return (
     <Routes>
@@ -28,7 +29,7 @@ const AppRouter = () => {
       {/* LOGIN */}
       <Route path="/" element={<LoginPage />} />
 
-      {/* SELECCIÓN DE ROL — cuando el usuario tiene 2+ módulos */}
+      {/* SELECCIÓN DE ROL */}
       <Route path="/home" element={
         <PrivateRoute><RoleSelectPage /></PrivateRoute>
       } />
