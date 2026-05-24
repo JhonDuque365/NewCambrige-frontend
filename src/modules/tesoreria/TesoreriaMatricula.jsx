@@ -1,7 +1,7 @@
 
 import { useNavigate } from 'react-router-dom';
 import React, { useState, useEffect } from 'react';
-import { allestudiantesRequest, allsalonesRequest, allmatriculasRequest, allrolesuserRequest, crearMatriculaRequest, allaniosacademicosRequest } from '../../api/endpoints'; 
+import {allestudiantesbyperiodoRequest, allsalonesbyperiodoRequest, allmatriculasbyperiodoRequest, allrolesuserRequest, crearMatriculaRequest, allaniosacademicosRequest } from '../../api/endpoints'; 
 
 import { Home } from "lucide-react";
 import { useAuth } from "../../api/useAuth";
@@ -21,7 +21,7 @@ const MatriculaTable = () => {
   const [salones, setSalones] = useState([]);
   const [matriculas, setMatriculas] = useState([]);
   const [periodos, setPeriodos] = useState([]);
-  const rolespermitidos =  ["secretaria", "administrador", "admin", "tesoreria"]
+  const rolespermitidos =  ["secretaria", "admin", "tesoreria"]
   const { user, logout } = useAuth();
   const userName = user?.nombre || "Usuario";
   const idUser = user?.id_usuario;
@@ -97,9 +97,9 @@ const MatriculaTable = () => {
   obtenerRoles();
   }, [idUser]);
 
-  const cargarEstudiantes = async () => {
+  const cargarEstudiantes = async (id_periodo) => {
     try {
-      const res = await allestudiantesRequest();
+      const res = await allestudiantesbyperiodoRequest(id_periodo);
       setEstudiantes(res.data);
       setEstudiantesFiltrados(res.data); 
     } catch (error) {
@@ -107,18 +107,18 @@ const MatriculaTable = () => {
     } 
   };
 
-  const cargarSalones = async () => {
+  const cargarSalones = async (id_periodo) => {
     try {
-      const res = await allsalonesRequest();
+      const res = await allsalonesbyperiodoRequest();
       setSalones(res.data);
     } catch (error) {
       console.error("Error cargando salones:", error);
     }
   };
 
-  const cargarMatriculas = async () => {
+  const cargarMatriculas = async (id_periodo) => {
     try {
-      const res = await allmatriculasRequest();
+      const res = await allmatriculasbyperiodoRequest();
       setMatriculas(res.data);
     } catch (error) {
       console.error("Error cargando matrículas:", error);
@@ -137,16 +137,19 @@ const MatriculaTable = () => {
   };
 
   useEffect(() => {
-    cargarEstudiantes();
-    cargarSalones();
-    cargarMatriculas();
     cargarPeriodos();
   }, []);
 
   useEffect(() => {
-        const filtroinit = estudiantes.filter(e => periodoMapname[filtros.Periodo] ? salonesMap[e.id_salon]?.id_periodo === periodoMapname[filtros.Periodo]?.id_periodo : true);
-        setEstudiantesFiltrados(filtroinit);
-      }, [estudiantes, matriculas]);
+    const idPeriodoActual = periodoMapname[filtros.Periodo]?.id_periodo;
+    if(idPeriodoActual){
+    cargarEstudiantes(idPeriodoActual);
+    cargarSalones(idPeriodoActual);
+    cargarMatriculas(idPeriodoActual);
+    }
+  
+  }, [filtros.Periodo]);
+
   
   //funcion para filtrar estudiantes según criterios de búsqueda
   const FiltrarEstudiantes = (filtros) => {
@@ -155,9 +158,8 @@ const MatriculaTable = () => {
       const cumpleNombre = e.nombre.toLowerCase().includes(filtros.nombre.toLowerCase());
       const cumpleGrado = filtros.Grado ? ((salonesMap[e.id_salon]?.grado).toString() === filtros.Grado) : true;
       const cumpleGrupo = filtros.Grupo ? (salonesMap[e.id_salon]?.grupo).toString() === filtros.Grupo : true;
-      const cumplePeriodo = filtros.Periodo ? periodosMap[salonesMap[e.id_salon]?.id_periodo]?.nombre === filtros.Periodo : true;
       
-      return cumpleDocumento && cumpleNombre && cumpleGrado && cumpleGrupo && cumplePeriodo;
+      return cumpleDocumento && cumpleNombre && cumpleGrado && cumpleGrupo;
     }));
   };
 
@@ -231,7 +233,7 @@ const MatriculaTable = () => {
                     />
 
                     <DataTable
-                              
+                              key={`${matriculas}`}
                               pageSize={10}
                               columns={[
                                 { key: "documento", label: "Documento" },

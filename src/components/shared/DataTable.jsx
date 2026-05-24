@@ -73,8 +73,6 @@ export default function DataTable({
   };
 
   const tienePaginacion = pageSize &&  pageSize > 0;
-  console.log(tienePaginacion);
-  console.log(pageSize);
   const totalPaginas = tienePaginacion ? Math.ceil(rows.length / pageSize) : 1;
   const filasMapeadas = tienePaginacion
     ? rows.slice((paginaActual - 1) * pageSize, paginaActual * pageSize)
