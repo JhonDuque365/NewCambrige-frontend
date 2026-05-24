@@ -52,10 +52,6 @@ const MatriculaTable = () => {
   matriculas.forEach(m => {
     matriculasMap[m.id_estudiante] = m; 
   });
-  const periodosMap = {};
-  periodos.forEach(p => {
-    periodosMap[p.id_periodo] = p;
-  });
   const periodoMapname = {};
   periodos.forEach(p => {
     periodoMapname[p.nombre] = p;
@@ -109,7 +105,7 @@ const MatriculaTable = () => {
 
   const cargarSalones = async (id_periodo) => {
     try {
-      const res = await allsalonesbyperiodoRequest();
+      const res = await allsalonesbyperiodoRequest(id_periodo);
       setSalones(res.data);
     } catch (error) {
       console.error("Error cargando salones:", error);
@@ -118,7 +114,7 @@ const MatriculaTable = () => {
 
   const cargarMatriculas = async (id_periodo) => {
     try {
-      const res = await allmatriculasbyperiodoRequest();
+      const res = await allmatriculasbyperiodoRequest(id_periodo);
       setMatriculas(res.data);
     } catch (error) {
       console.error("Error cargando matrículas:", error);
@@ -156,7 +152,7 @@ const MatriculaTable = () => {
     setEstudiantesFiltrados(estudiantes.filter(e => {
       const cumpleDocumento = e.documento.toString().includes(filtros.documento);
       const cumpleNombre = e.nombre.toLowerCase().includes(filtros.nombre.toLowerCase());
-      const cumpleGrado = filtros.Grado ? ((salonesMap[e.id_salon]?.grado).toString() === filtros.Grado) : true;
+      const cumpleGrado = filtros.Grado ? (salonesMap[e.id_salon]?.grado).toString() === filtros.Grado : true;
       const cumpleGrupo = filtros.Grupo ? (salonesMap[e.id_salon]?.grupo).toString() === filtros.Grupo : true;
       
       return cumpleDocumento && cumpleNombre && cumpleGrado && cumpleGrupo;
@@ -202,13 +198,13 @@ const MatriculaTable = () => {
                   { key: "documento", label: "Código", type: "number", maxLength:10 },
                   { key: "nombre",    label: "Nombre",type: "text", maxLength:100 },
                   { key: "Grado",   label: "Grado",         type: "select", 
-                    options: filtros.Periodo ? Array.from(new Set(Object.values(salonesMap)
+                    options: Array.from(new Set(Object.values(salonesMap)
                     .filter(s => s.id_periodo === periodoMapname[filtros.Periodo]?.id_periodo)
-                    .map(s => s.grado).filter(Boolean))) : []},
+                    .map(s => s.grado).filter(Boolean))) },
                   { key: "Grupo",   label: "Grupo",        type: "select", 
-                    options: filtros.Grado ? Array.from(new Set(Object.values(salonesMap)
+                    options:  Array.from(new Set(Object.values(salonesMap)
                     .filter(s => (s.grado).toString() === filtros.Grado)
-                    .map(s => s.grupo).filter(Boolean))): [] },
+                    .map(s => s.grupo).filter(Boolean))) },
                   { key: "Periodo",   label: "Periodo", type: "select", 
                     options: Array.from(new Set(Object.values(periodos).map(s => s.nombre).filter(Boolean)))},
                       ]}
