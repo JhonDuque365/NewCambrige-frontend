@@ -1,5 +1,4 @@
 
-import { useNavigate } from 'react-router-dom';
 import React, { useState, useEffect } from 'react';
 import {allestudiantesbyperiodoRequest, allsalonesbyperiodoRequest, allmatriculasbyperiodoRequest, allrolesuserRequest, crearMatriculaRequest, allaniosacademicosRequest } from '../../api/endpoints'; 
 
@@ -176,13 +175,13 @@ const TesoreriaMatricula = () => {
             actions={
                 <ActionButtons
                   filaSeleccionada={fila}
-                  botones={[
+                  botones={ roles.some(rol => rolespermitidos.includes(rol)) ?[
                     { label: "Validar Pago",  
                       onClick: () => {  setModal(true); }, 
                       siempreActivo: false , variante: "primary", 
                       disabled: matriculasMap[fila?.id_estudiante]  || !periodoMapname[filtros.Periodo]?.activo || 
                                 (fila &&  salonesMap[fila.id_salon]?.id_periodo !== periodoMapname[filtros.Periodo]?.id_periodo)  },
-                          ]}
+                          ] : []}
                 />
               }
             >  
