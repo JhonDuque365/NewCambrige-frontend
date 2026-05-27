@@ -39,8 +39,7 @@ const TesoreriaMatricula = () => {
   }); 
   //para el sidebar
   const modulos = [
-    { label: "Inicio", icon: <Home />,    path: "/home" },
-    { label: "Estadisticas",    path: "/tesoreria/estadisticas", roles: rolespermitidos },
+    { label: "Inicio", icon: <Home />,    path: "/Tesoreria" }
   ];
   //maps para acceso rápido a datos relacionados
   const salonesMap = {};
@@ -163,7 +162,6 @@ const TesoreriaMatricula = () => {
     <Header title="SISTEMA DE PAZ Y SALVO - NEW CAMBRIDGE SCHOOL" />
     <ModuleLayout 
     sidebar={<Sidebar 
-       moduloActual="Matrícula"
             menuItems={modulos.filter(modulo => {
                 if (!modulo) return false;
                 if (!modulo.roles || !Array.isArray(modulo.roles) || modulo.roles.length === 0) return true;

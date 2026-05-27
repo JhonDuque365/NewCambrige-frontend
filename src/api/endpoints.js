@@ -7,6 +7,14 @@ export const crearMatriculaRequest = ( estudiante_id, periodo_id ) => axiosClien
     id_periodo: periodo_id
   });
 
+export const crearDetalleRequest = (matricula_id, tipo_id, mes) => axiosClient.post(`api/secretaria/detalles-matricula`,
+    {
+        id_matricula: matricula_id,
+        id_tipo: tipo_id,
+        mes: mes
+    }
+)
+
 export const alltipoconceptoRequest =() => axiosClient.get("/api/secretaria/tipos-concepto");
 export const allestudiantesbyperiodoRequest = (id_periodo) => axiosClient.get(`/api/estudiantes/periodo/${id_periodo}`);
 export const allsalonesbyperiodoRequest = (id_periodo) => axiosClient.get(`/api/salones/periodo/${id_periodo}`);
