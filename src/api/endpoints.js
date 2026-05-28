@@ -1,7 +1,7 @@
 import axiosClient from "./axiosClient";
 
 export const allrolesuserRequest = (id) => axiosClient.get(`/api/usuarios/${id}/roles`);
-export const allaniosacademicosRequest =() => axiosClient.get("/api/parametros/parametrizacion/anio-escolar");
+export const allaniosacademicosRequest =() => axiosClient.get("/api/parametrizacion/anio-escolar");
 export const crearMatriculaRequest = ( estudiante_id, periodo_id ) => axiosClient.post(`/api/secretaria/matriculas`, {
     id_estudiante: estudiante_id,
     id_periodo: periodo_id
