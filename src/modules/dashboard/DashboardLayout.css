@@ -1,0 +1,61 @@
+/* ── LAYOUT GENERAL ─────────────────────────────── */
+.dash-layout {
+  min-height: 100vh;
+  background: #f4f6fb;
+  padding: 24px 20px 40px;
+  font-family: 'Segoe UI', sans-serif;
+  box-sizing: border-box;
+}
+
+/* ── HEADER ─────────────────────────────────────── */
+.dash-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: #fff;
+  border-radius: 14px;
+  padding: 18px 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.07);
+}
+.dash-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  color: #fff;
+  flex-shrink: 0;
+}
+.dash-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin: 0;
+}
+.dash-subtitle {
+  font-size: 0.82rem;
+  color: #888;
+  margin: 2px 0 0;
+}
+
+/* ── BENTO GRID ──────────────────────────────────── */
+.dash-bento {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+/* Tarjeta wide (ocupa 2 columnas si cabe) */
+.bento-wide {
+  grid-column: span 2;
+}
+
+@media (max-width: 768px) {
+  .dash-layout { padding: 14px 10px 30px; }
+  .dash-title   { font-size: 1.1rem; }
+  .dash-bento   { grid-template-columns: 1fr; }
+  .bento-wide   { grid-column: span 1; }
+}
