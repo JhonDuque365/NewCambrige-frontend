@@ -1,233 +1,191 @@
-import { useState } from "react";
-import { BarChart2, Users, FileCheck, AlertTriangle, LayoutDashboard } from "lucide-react";
+// src/modules/dashboard/DashboardPage.jsx
+import { useEffect, useState, useCallback } from "react";
+import { Home, LayoutDashboard } from "lucide-react";
+import {
+  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
+  PieChart, Pie, Cell, Legend, LineChart, Line, CartesianGrid,
+} from "recharts";
+
 import Header from "../../components/layout/header";
 import Sidebar from "../../components/layout/Sidebar";
 import ModuleLayout from "../../components/layout/ModuleLayout";
 import { useAuth } from "../../api/useAuth";
-import { useDashboard } from "../../hooks/useDashboard";
-import { Home } from "lucide-react";
-import salonIcon from "../../assets/Salon/salon.svg";
-import tesoreriaIcon from "../../assets/Tesoreria/tesoreria.svg";
-import bandaIcon from "../../assets/Banda/banda.svg";
-import uniformesIcon from "../../assets/Objetos/objetos.svg";
-import DashboardIcon from "../../assets/Parametrizacion/parametrizacion.svg";
-import rectoriaIcon from "../../assets/Rectoria/estudiante.svg";
-import paraIcon from "../../assets/Parametrizacion/parametrizacion.svg";
+import {
+  getPeriodos,
+  getEstudiantesPorPeriodo,
+  getPendientesPazSalvo,
+  getPagosPendientes,
+  getEstadisticasBanda,
+  getPrestamosActivosBanda,
+  getPrestamosActivosUniformes,
+  getSalonesPorPeriodo,
+} from "../../api/dashboardService";
 import "./DashboardPage.css";
 
-// ── Mini chart components (SVG puro, sin dependencias externas) ───────────────
+// Paleta institucional
+const C_RED    = "#8E2A25";
+const C_BLUE   = "#1B3A5C";
+const C_GREEN  = "#2E7D4F";
+const C_WARN   = "#A06000";
+const C_GRAY   = "#C9B99A";
+const DONUT_COLORS = [C_GREEN, C_RED, C_WARN];
+const BAR_COLORS   = [C_RED, C_BLUE, C_GREEN, C_WARN, "#5C3A8E", "#1A7A7A"];
 
-function BarChartSVG({ data, colors }) {
-  const max = Math.max(...data.map((d) => d.value), 1);
-  const H = 120;
-  const barW = Math.max(20, Math.floor(240 / data.length) - 8);
+// ── Tooltip personalizado ──────────────────────────────────
+const CustomTooltip = ({ active, payload, label }) => {
+  if (!active || !payload?.length) return null;
   return (
-    <svg width="100%" viewBox={`0 0 ${data.length * (barW + 8)} ${H + 30}`} className="db-svg-chart">
-      {data.map((d, i) => {
-        const h = Math.max(4, (d.value / max) * H);
-        const x = i * (barW + 8);
-        const y = H - h;
-        return (
-          <g key={d.label}>
-            <rect x={x} y={y} width={barW} height={h} fill={colors[i % colors.length]} rx="4" />
-            <text x={x + barW / 2} y={H + 14} textAnchor="middle" fontSize="10" fill="#666">
-              {d.label.length > 6 ? d.label.slice(0, 6) + "…" : d.label}
-            </text>
-            <text x={x + barW / 2} y={y - 4} textAnchor="middle" fontSize="11" fontWeight="600" fill="#333">
-              {d.value}
-            </text>
-          </g>
-        );
-      })}
-    </svg>
-  );
-}
-
-function DonutSVG({ segments, size = 110 }) {
-  const r = 38;
-  const cx = size / 2;
-  const cy = size / 2;
-  const total = segments.reduce((a, s) => a + s.value, 0) || 1;
-  let startAngle = -90;
-  const slices = segments.map((s) => {
-    const angle = (s.value / total) * 360;
-    const start = startAngle;
-    startAngle += angle;
-    return { ...s, startAngle: start, angle };
-  });
-  const toXY = (angle, radius) => [
-    cx + radius * Math.cos((angle * Math.PI) / 180),
-    cy + radius * Math.sin((angle * Math.PI) / 180),
-  ];
-  return (
-    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-      {slices.map((s, i) => {
-        if (s.angle === 0) return null;
-        const [x1, y1] = toXY(s.startAngle, r);
-        const [x2, y2] = toXY(s.startAngle + s.angle, r);
-        const large = s.angle > 180 ? 1 : 0;
-        const path = `M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${large} 1 ${x2} ${y2} Z`;
-        return <path key={i} d={path} fill={s.color} opacity="0.9" />;
-      })}
-      <circle cx={cx} cy={cy} r={r * 0.55} fill="white" />
-      <text x={cx} y={cy + 5} textAnchor="middle" fontSize="13" fontWeight="700" fill="#333">
-        {total}
-      </text>
-    </svg>
-  );
-}
-
-// ── Tarjeta KPI ───────────────────────────────────────────────────────────────
-function KpiCard({ label, value, icon: Icon, accent }) {
-  return (
-    <div className="db-kpi" style={{ "--accent": accent }}>
-      <div className="db-kpi-icon">
-        <Icon size={22} />
-      </div>
-      <div>
-        <p className="db-kpi-val">{value ?? "—"}</p>
-        <p className="db-kpi-label">{label}</p>
-      </div>
-    </div>
-  );
-}
-
-// ── Tarjeta de gráfica con switch opcional ────────────────────────────────────
-function ChartCard({ title, showSwitch = false, bar, donut, defaultType = "donut" }) {
-  const [type, setType] = useState(defaultType);
-  return (
-    <div className="db-chart-card">
-      <div className="db-chart-header">
-        <span className="db-chart-title">{title}</span>
-        {showSwitch && (
-          <div className="db-switch">
-            <button
-              className={type === "donut" ? "active" : ""}
-              onClick={() => setType("donut")}
-            >
-              Dona
-            </button>
-            <button
-              className={type === "bar" ? "active" : ""}
-              onClick={() => setType("bar")}
-            >
-              Barras
-            </button>
-          </div>
-        )}
-      </div>
-      <div className="db-chart-body">
-        {type === "donut" ? donut : bar}
-      </div>
-    </div>
-  );
-}
-
-// ── Leyenda ───────────────────────────────────────────────────────────────────
-function Legend({ items }) {
-  return (
-    <ul className="db-legend">
-      {items.map((item) => (
-        <li key={item.label}>
-          <span className="db-legend-dot" style={{ background: item.color }} />
-          <span>{item.label}</span>
-          <strong>{item.value}</strong>
-        </li>
+    <div className="dash-tooltip">
+      {label && <p className="dash-tooltip-label">{label}</p>}
+      {payload.map((p, i) => (
+        <p key={i} style={{ color: p.color }}>
+          {p.name}: <strong>{p.value}</strong>
+        </p>
       ))}
-    </ul>
-  );
-}
-
-// ── Skeleton loader ───────────────────────────────────────────────────────────
-function Skeleton() {
-  return (
-    <div className="db-skeleton">
-      {[...Array(4)].map((_, i) => <div key={i} className="db-skel-card" />)}
-      {[...Array(3)].map((_, i) => <div key={i} className="db-skel-chart" />)}
     </div>
   );
-}
+};
 
-// ── Paleta ────────────────────────────────────────────────────────────────────
-const ROJO = "#8e2a25";
-const AZUL = "#1B3A5C";
-const VERDE = "#2e7d52";
-const NARANJA = "#c46a00";
-const GRIS = "#bdbdbd";
-const PALETA = [ROJO, AZUL, VERDE, NARANJA, "#6d4c9e", "#00838f"];
+// ── Componente KPI Card ────────────────────────────────────
+const KpiCard = ({ title, value, sub, color, loading }) => (
+  <div className="dash-kpi-card" style={{ borderTopColor: color }}>
+    <span className="dash-kpi-title">{title}</span>
+    {loading
+      ? <span className="dash-kpi-skeleton" />
+      : <span className="dash-kpi-value" style={{ color }}>{value ?? "—"}</span>
+    }
+    {sub && <span className="dash-kpi-sub">{sub}</span>}
+  </div>
+);
 
-// ── Página principal ──────────────────────────────────────────────────────────
+// ── Componente Switch gráfica ──────────────────────────────
+const ChartSwitch = ({ options, value, onChange }) => (
+  <div className="dash-switch">
+    {options.map((o) => (
+      <button
+        key={o.value}
+        type="button"
+        className={`dash-switch-btn ${value === o.value ? "active" : ""}`}
+        onClick={() => onChange(o.value)}
+      >{o.label}</button>
+    ))}
+  </div>
+);
+
+// ══════════════════════════════════════════════════════════
 export default function DashboardPage() {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const [selectedMenu, setSelectedMenu] = useState("Dashboard");
-  const { periodos, periodoSeleccionado, setPeriodoSeleccionado, data, loading, error } = useDashboard();
 
+  // ── Estado global ──────────────────────────────────────
+  const [periodos,   setPeriodos]   = useState([]);
+  const [periodoId,  setPeriodoId]  = useState("");
+  const [loading,    setLoading]    = useState(true);
+
+  // ── Datos ──────────────────────────────────────────────
+  const [kpi,        setKpi]        = useState({});
+  const [salonesData,setSalonesData]= useState([]);
+  const [pazData,    setPazData]    = useState([]);
+  const [prestData,  setPrestData]  = useState([]);
+  const [pagos,      setPagos]      = useState([]);
+
+  // ── Switch estados ─────────────────────────────────────
+  const [pazChart,   setPazChart]   = useState("donut"); // donut | bar
+
+  // ── Menú sidebar ──────────────────────────────────────
   const menuItems = [
-    { label: "Inicio",         icon: <Home size={24} /> },
-    { label: "Dashboard",      icon: DashboardIcon },
-    { label: "Salón",          icon: salonIcon },
-    { label: "Tesorería",      icon: tesoreriaIcon },
-    { label: "Rectoría",       icon: rectoriaIcon },
-    { label: "Uniformes",      icon: uniformesIcon },
-    { label: "Banda",          icon: bandaIcon },
-    { label: "Parametrización",icon: paraIcon },
+    { label: "Inicio",     icon: <Home size={18} /> },
+    { label: "Dashboard",  icon: <LayoutDashboard size={18} /> },
   ];
 
-  // ── Datos procesados para gráficas ─────────────────────────────────────────
-  const pazSalvoSegs = data
-    ? [
-        { label: "Firmados",   value: data.pazSalvo.firmados,   color: VERDE },
-        { label: "Pendientes", value: data.pazSalvo.pendientes, color: ROJO },
-      ]
-    : [];
+  // ── Cargar períodos al montar ──────────────────────────
+  useEffect(() => {
+    getPeriodos()
+      .then((r) => {
+        const data = r.data;
+        setPeriodos(data);
+        if (data.length > 0) setPeriodoId(String(data[0].id));
+      })
+      .catch(() => {});
+  }, []);
 
-  const pazSalvoBar = data
-    ? [
-        { label: "Firmados",   value: data.pazSalvo.firmados,   color: VERDE },
-        { label: "Pendientes", value: data.pazSalvo.pendientes, color: ROJO },
-      ]
-    : [];
+  // ── Cargar datos cuando cambia el período ──────────────
+  const cargarDatos = useCallback(async () => {
+    if (!periodoId) return;
+    setLoading(true);
+    try {
+      const [estudRes, pendRes, pagRes, bandaRes, bandaPrestRes, unifPrestRes, salonRes] =
+        await Promise.allSettled([
+          getEstudiantesPorPeriodo(periodoId),
+          getPendientesPazSalvo(),
+          getPagosPendientes(),
+          getEstadisticasBanda(),
+          getPrestamosActivosBanda(),
+          getPrestamosActivosUniformes(),
+          getSalonesPorPeriodo(periodoId),
+        ]);
 
-  const tesoreriaSegs = data
-    ? [
-        { label: "Al día",     value: data.tesoreria.pagados,    color: VERDE },
-        { label: "Pendiente",  value: data.tesoreria.pendientes, color: NARANJA },
-      ]
-    : [];
+      // ── KPI ──
+      const totalEstudiantes = estudRes.status === "fulfilled" ? estudRes.value.data?.length ?? 0 : 0;
+      const totalPendientes  = pendRes.status  === "fulfilled" ? pendRes.value.data?.length  ?? 0 : 0;
+      const totalPagos       = pagRes.status   === "fulfilled" ? pagRes.value.data?.length   ?? 0 : 0;
+      const bandaStats       = bandaRes.status === "fulfilled" ? bandaRes.value.data         : {};
 
-  const bandaSegs = data
-    ? [
-        { label: "Disponibles", value: data.banda.disponibles, color: AZUL },
-        { label: "Prestados",   value: data.banda.prestados,   color: ROJO },
-      ]
-    : [];
+      setKpi({
+        estudiantes:  totalEstudiantes,
+        pendientes:   totalPendientes,
+        pazOk:        totalEstudiantes - totalPendientes,
+        pagosPend:    totalPagos,
+        instrDisp:    bandaStats?.instrumentos_disponibles ?? "—",
+      });
 
-  const bandaCatBar = data
-    ? Object.entries(data.banda.categorias).map(([k, v], i) => ({
-        label: k,
-        value: v,
-        color: PALETA[i % PALETA.length],
-      }))
-    : [];
+      // ── Paz y Salvo donut/bar ──
+      const pendList = pendRes.status === "fulfilled" ? pendRes.value.data ?? [] : [];
+      setPazData([
+        { name: "Al día",    value: totalEstudiantes - pendList.length },
+        { name: "Pendiente", value: pendList.length },
+      ]);
 
-  const firmasBar = data
-    ? Object.entries(data.pazSalvo.firmaModulos).map(([k, v], i) => ({
-        label: k.charAt(0).toUpperCase() + k.slice(1),
-        value: v,
-        color: PALETA[i % PALETA.length],
-      }))
-    : [];
+      // ── Pagos pendientes (top 5) ──
+      const pagosList = pagRes.status === "fulfilled" ? pagRes.value.data ?? [] : [];
+      setPagos(pagosList.slice(0, 5));
 
-  const uniformesSegs = data
-    ? [
-        { label: "Disponibles",      value: data.uniformes.disponibles,     color: VERDE },
-        { label: "Préstamos activos", value: data.uniformes.prestamosActivos, color: NARANJA },
-      ]
-    : [];
+      // ── Préstamos activos: banda vs uniformes ──
+      const bandaPrest  = bandaPrestRes.status  === "fulfilled" ? bandaPrestRes.value.data  ?? [] : [];
+      const unifPrest   = unifPrestRes.status   === "fulfilled" ? unifPrestRes.value.data   ?? [] : [];
+      setPrestData([
+        { modulo: "Banda",    activos: bandaPrest.length },
+        { modulo: "Uniformes",activos: unifPrest.length  },
+      ]);
+
+      // ── Salones: estudiantes por salón ──
+      const salones = salonRes.status === "fulfilled" ? salonRes.value.data ?? [] : [];
+      setSalonesData(
+        salones
+          .filter((s) => s.total_estudiantes > 0)
+          .map((s) => ({
+            nombre: `${s.grado}°${s.grupo}`,
+            estudiantes: s.total_estudiantes ?? 0,
+          }))
+          .sort((a, b) => b.estudiantes - a.estudiantes)
+          .slice(0, 10)
+      );
+
+    } catch (e) {
+      console.error("Error cargando dashboard", e);
+    } finally {
+      setLoading(false);
+    }
+  }, [periodoId]);
+
+  useEffect(() => { cargarDatos(); }, [cargarDatos]);
+
+  // ── Período seleccionado (label) ───────────────────────
+  const periodoLabel = periodos.find((p) => String(p.id) === periodoId)?.nombre ?? "";
 
   return (
-    <div className="db-root">
-      <Header title="DASHBOARD — NEW CAMBRIDGE SCHOOL" />
+    <div className="dashboard-container">
+      <Header title="SISTEMA DE PAZ Y SALVO — NEW CAMBRIDGE SCHOOL" />
       <ModuleLayout
         sidebar={
           <Sidebar
@@ -238,138 +196,167 @@ export default function DashboardPage() {
           />
         }
       >
-        <div className="db-content">
+        <div className="dash-wrapper">
 
-          {/* ── Filtro de periodo ─────────────────────────────────────── */}
-          <div className="db-topbar">
-            <div className="db-topbar-left">
-              <BarChart2 size={20} color={ROJO} />
-              <span>Resumen general</span>
+          {/* ── FILTRO PERÍODO ──────────────────────────── */}
+          <div className="dash-filter-bar">
+            <label className="dash-filter-label" htmlFor="periodo-select">
+              Período académico
+            </label>
+            <select
+              id="periodo-select"
+              className="dash-filter-select"
+              value={periodoId}
+              onChange={(e) => setPeriodoId(e.target.value)}
+            >
+              {periodos.map((p) => (
+                <option key={p.id} value={String(p.id)}>{p.nombre}</option>
+              ))}
+            </select>
+            {periodoLabel && (
+              <span className="dash-filter-badge">{periodoLabel}</span>
+            )}
+          </div>
+
+          {/* ── KPI CARDS ────────────────────────────────── */}
+          <div className="dash-kpi-grid">
+            <KpiCard title="Estudiantes"     value={kpi.estudiantes} sub="en el período"        color={C_BLUE}  loading={loading} />
+            <KpiCard title="Paz y Salvo OK"  value={kpi.pazOk}       sub="sin pendientes"        color={C_GREEN} loading={loading} />
+            <KpiCard title="Con Pendientes"  value={kpi.pendientes}  sub="paz y salvo incompleto" color={C_RED}   loading={loading} />
+            <KpiCard title="Pagos Pendientes"value={kpi.pagosPend}   sub="por regularizar"       color={C_WARN}  loading={loading} />
+          </div>
+
+          {/* ── FILA 1: Paz y Salvo + Préstamos ─────────── */}
+          <div className="dash-row">
+
+            {/* PAZ Y SALVO */}
+            <div className="dash-card dash-card--md">
+              <div className="dash-card-header">
+                <h3 className="dash-card-title">Estado Paz y Salvo</h3>
+                <ChartSwitch
+                  options={[
+                    { label: "Donut", value: "donut" },
+                    { label: "Barras", value: "bar" },
+                  ]}
+                  value={pazChart}
+                  onChange={setPazChart}
+                />
+              </div>
+
+              {pazChart === "donut" ? (
+                <ResponsiveContainer width="100%" height={240}>
+                  <PieChart>
+                    <Pie
+                      data={pazData}
+                      cx="50%" cy="50%"
+                      innerRadius={60} outerRadius={95}
+                      paddingAngle={4}
+                      dataKey="value"
+                      label={({ name, percent }) =>
+                        `${name} ${(percent * 100).toFixed(0)}%`
+                      }
+                    >
+                      {pazData.map((_, i) => (
+                        <Cell key={i} fill={DONUT_COLORS[i % DONUT_COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip content={<CustomTooltip />} />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <ResponsiveContainer width="100%" height={240}>
+                  <BarChart data={pazData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e0d8cc" />
+                    <XAxis dataKey="name" tick={{ fontSize: 12, fill: "#6B6560" }} />
+                    <YAxis tick={{ fontSize: 12, fill: "#6B6560" }} />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Bar dataKey="value" name="Estudiantes" radius={[4, 4, 0, 0]}>
+                      {pazData.map((_, i) => (
+                        <Cell key={i} fill={DONUT_COLORS[i % DONUT_COLORS.length]} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
             </div>
-            <div className="db-topbar-right">
-              <label htmlFor="periodo-select">Periodo académico</label>
-              <select
-                id="periodo-select"
-                value={periodoSeleccionado ?? ""}
-                onChange={(e) => setPeriodoSeleccionado(Number(e.target.value))}
-              >
-                {periodos.map((p) => (
-                  <option key={p.id_periodo} value={p.id_periodo}>
-                    {p.nombre}{p.activo ? " ✓" : ""}
-                  </option>
-                ))}
-              </select>
+
+            {/* PRÉSTAMOS ACTIVOS */}
+            <div className="dash-card dash-card--sm">
+              <div className="dash-card-header">
+                <h3 className="dash-card-title">Préstamos Activos</h3>
+              </div>
+              <ResponsiveContainer width="100%" height={240}>
+                <BarChart data={prestData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e0d8cc" />
+                  <XAxis dataKey="modulo" tick={{ fontSize: 12, fill: "#6B6560" }} />
+                  <YAxis tick={{ fontSize: 12, fill: "#6B6560" }} allowDecimals={false} />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Bar dataKey="activos" name="Activos" radius={[4, 4, 0, 0]}>
+                    {prestData.map((_, i) => (
+                      <Cell key={i} fill={BAR_COLORS[i % BAR_COLORS.length]} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
             </div>
           </div>
 
-          {error && <div className="db-error">{error}</div>}
+          {/* ── FILA 2: Estudiantes por salón + Pagos ────── */}
+          <div className="dash-row">
 
-          {loading ? <Skeleton /> : data && (
-            <div className="db-bento">
-
-              {/* ── Fila 1: KPIs ──────────────────────────────────────── */}
-              <div className="db-row db-kpi-row">
-                <KpiCard label="Estudiantes" value={data.kpis.totalEstudiantes} icon={Users} accent={AZUL} />
-                <KpiCard label="Paz y Salvo firmados" value={data.kpis.pazSalvoFirmados} icon={FileCheck} accent={VERDE} />
-                <KpiCard label="Pendientes firma" value={data.kpis.pazSalvoPendientes} icon={AlertTriangle} accent={ROJO} />
-                <KpiCard label="Salones activos" value={data.kpis.totalSalones} icon={LayoutDashboard} accent={NARANJA} />
+            {/* SALONES */}
+            <div className="dash-card dash-card--lg">
+              <div className="dash-card-header">
+                <h3 className="dash-card-title">Estudiantes por Salón</h3>
+                <span className="dash-card-sub">Período actual</span>
               </div>
-
-              {/* ── Fila 2: Paz y Salvo + Tesorería + Banda ───────────── */}
-              <div className="db-row db-charts-row">
-
-                {/* Paz y Salvo – con switch dona / barras */}
-                <ChartCard
-                  title="Paz y Salvo"
-                  showSwitch
-                  defaultType="donut"
-                  donut={
-                    <div className="db-chart-inner">
-                      <DonutSVG segments={pazSalvoSegs} size={120} />
-                      <Legend items={[
-                        { label: "Firmados",   value: data.pazSalvo.firmados,   color: VERDE },
-                        { label: "Pendientes", value: data.pazSalvo.pendientes, color: ROJO },
-                      ]} />
-                    </div>
-                  }
-                  bar={
-                    <BarChartSVG data={pazSalvoBar} colors={[VERDE, ROJO]} />
-                  }
-                />
-
-                {/* Tesorería – solo dona */}
-                <ChartCard
-                  title="Pagos Tesorería"
-                  showSwitch={false}
-                  defaultType="donut"
-                  donut={
-                    <div className="db-chart-inner">
-                      <DonutSVG segments={tesoreriaSegs} size={120} />
-                      <Legend items={[
-                        { label: "Al día",     value: data.tesoreria.pagados,    color: VERDE },
-                        { label: "Pendiente",  value: data.tesoreria.pendientes, color: NARANJA },
-                      ]} />
-                    </div>
-                  }
-                />
-
-                {/* Banda – con switch dona / barras por categoría */}
-                <ChartCard
-                  title="Instrumentos Banda"
-                  showSwitch
-                  defaultType="donut"
-                  donut={
-                    <div className="db-chart-inner">
-                      <DonutSVG segments={bandaSegs} size={120} />
-                      <Legend items={[
-                        { label: "Disponibles", value: data.banda.disponibles, color: AZUL },
-                        { label: "Prestados",   value: data.banda.prestados,   color: ROJO },
-                      ]} />
-                    </div>
-                  }
-                  bar={
-                    bandaCatBar.length > 0
-                      ? <BarChartSVG data={bandaCatBar} colors={PALETA} />
-                      : <p className="db-empty">Sin categorías registradas</p>
-                  }
-                />
-              </div>
-
-              {/* ── Fila 3: Pendientes por módulo (barras) + Uniformes ── */}
-              <div className="db-row db-bottom-row">
-
-                {/* Pendientes por módulo – solo barras, ocupa 2 columnas */}
-                <div className="db-chart-card db-wide">
-                  <div className="db-chart-header">
-                    <span className="db-chart-title">Firmas pendientes por módulo</span>
-                  </div>
-                  <div className="db-chart-body">
-                    {firmasBar.length > 0
-                      ? <BarChartSVG data={firmasBar} colors={PALETA} />
-                      : <p className="db-empty">Todos los módulos al día ✓</p>
-                    }
-                  </div>
-                </div>
-
-                {/* Uniformes */}
-                <ChartCard
-                  title="Uniformes / Objetos"
-                  showSwitch={false}
-                  defaultType="donut"
-                  donut={
-                    <div className="db-chart-inner">
-                      <DonutSVG segments={uniformesSegs} size={120} />
-                      <Legend items={[
-                        { label: "Disponibles",      value: data.uniformes.disponibles,     color: VERDE },
-                        { label: "Préstamos activos", value: data.uniformes.prestamosActivos, color: NARANJA },
-                      ]} />
-                    </div>
-                  }
-                />
-              </div>
-
+              {salonesData.length === 0 && !loading ? (
+                <p className="dash-empty">Sin datos para este período</p>
+              ) : (
+                <ResponsiveContainer width="100%" height={280}>
+                  <BarChart
+                    data={salonesData}
+                    layout="vertical"
+                    margin={{ top: 0, right: 20, left: 30, bottom: 0 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e0d8cc" horizontal={false} />
+                    <XAxis type="number" tick={{ fontSize: 11, fill: "#6B6560" }} allowDecimals={false} />
+                    <YAxis type="category" dataKey="nombre" tick={{ fontSize: 11, fill: "#1A1A1A" }} width={45} />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Bar dataKey="estudiantes" name="Estudiantes" fill={C_BLUE} radius={[0, 4, 4, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
             </div>
-          )}
+
+            {/* PAGOS PENDIENTES TOP 5 */}
+            <div className="dash-card dash-card--sm">
+              <div className="dash-card-header">
+                <h3 className="dash-card-title">Pagos Pendientes</h3>
+                <span className="dash-card-sub">Top 5</span>
+              </div>
+              {pagos.length === 0 && !loading ? (
+                <p className="dash-empty">Sin pagos pendientes 🎉</p>
+              ) : (
+                <ul className="dash-pagos-list">
+                  {pagos.map((pago, i) => (
+                    <li key={i} className="dash-pagos-item">
+                      <span className="dash-pagos-num">{i + 1}</span>
+                      <div className="dash-pagos-info">
+                        <span className="dash-pagos-nombre">
+                          {pago.nombre_estudiante ?? pago.estudiante ?? `Estudiante ${pago.estudiante_id}`}
+                        </span>
+                        <span className="dash-pagos-concepto">{pago.concepto ?? pago.tipo ?? "Pendiente"}</span>
+                      </div>
+                      <span className="dash-pagos-badge">Pendiente</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
+
         </div>
       </ModuleLayout>
     </div>

@@ -1,49 +1,38 @@
+// src/api/dashboardService.js
 import axiosClient from "./axiosClient";
 
-// ── Periodos académicos ──────────────────────────────────────────────────────
+// Períodos académicos (filtro global)
 export const getPeriodos = () =>
-  axiosClient.get("/api/paz-salvo/periodos").then((r) => r.data);
+  axiosClient.get("/api/paz-salvo/periodos");
 
-// ── Paz y Salvo ──────────────────────────────────────────────────────────────
-export const getPendientes = (periodoId) =>
-  axiosClient
-    .get("/api/paz-salvo/pendientes", { params: { periodo_id: periodoId } })
-    .then((r) => r.data);
-
-// ── Estudiantes ───────────────────────────────────────────────────────────────
-export const getEstudiantesPorPeriodo = (periodoId) =>
-  axiosClient
-    .get(`/api/estudiantes/periodo/${periodoId}`)
-    .then((r) => r.data);
-
+// KPI: total estudiantes (sin filtro de período en endpoint, filtramos en frontend)
 export const getEstudiantes = () =>
-  axiosClient.get("/api/estudiantes/").then((r) => r.data);
+  axiosClient.get("/api/estudiantes/");
 
-// ── Tesorería ─────────────────────────────────────────────────────────────────
-export const getPagosPendientes = (periodoId) =>
-  axiosClient
-    .get("/api/tesoreria/pagos-pendientes", { params: { periodo_id: periodoId } })
-    .then((r) => r.data);
+// KPI + gráfica: estudiantes por período
+export const getEstudiantesPorPeriodo = (idPeriodo) =>
+  axiosClient.get(`/api/estudiantes/periodo/${idPeriodo}`);
 
-// ── Banda ─────────────────────────────────────────────────────────────────────
+// KPI + gráfica: paz y salvo pendientes
+export const getPendientesPazSalvo = () =>
+  axiosClient.get("/api/paz-salvo/pendientes");
+
+// KPI: pagos pendientes
+export const getPagosPendientes = () =>
+  axiosClient.get("/api/tesoreria/pagos-pendientes");
+
+// Estadísticas banda
 export const getEstadisticasBanda = () =>
-  axiosClient.get("/api/banda/estadisticas").then((r) => r.data);
+  axiosClient.get("/api/banda/estadisticas");
 
-export const getInstrumentos = () =>
-  axiosClient.get("/api/banda/instrumentos").then((r) => r.data);
+// Préstamos activos banda
+export const getPrestamosActivosBanda = () =>
+  axiosClient.get("/api/banda/prestamos/activos");
 
-export const getPrestamosBanda = () =>
-  axiosClient.get("/api/banda/prestamos").then((r) => r.data);
+// Préstamos activos uniformes
+export const getPrestamosActivosUniformes = () =>
+  axiosClient.get("/api/uniformes/prestamos/activos");
 
-// ── Uniformes ─────────────────────────────────────────────────────────────────
-export const getObjetos = () =>
-  axiosClient.get("/api/uniformes/objetos").then((r) => r.data);
-
-export const getUniformesPrestamos = () =>
-  axiosClient.get("/api/uniformes/prestamos").then((r) => r.data);
-
-// ── Salones ───────────────────────────────────────────────────────────────────
-export const getSalonesPorPeriodo = (periodoId) =>
-  axiosClient
-    .get(`/api/salones/periodo/${periodoId}`)
-    .then((r) => r.data);
+// Salones por período
+export const getSalonesPorPeriodo = (idPeriodo) =>
+  axiosClient.get(`/api/salones/periodo/${idPeriodo}`);
