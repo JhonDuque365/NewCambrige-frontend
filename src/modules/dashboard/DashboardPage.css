@@ -1,0 +1,321 @@
+/* =========================================
+   DASHBOARD — New Cambridge School
+   Estructura Bento · Paleta institucional
+========================================= */
+
+:root {
+  --db-rojo:    #8e2a25;
+  --db-azul:    #1B3A5C;
+  --db-verde:   #2e7d52;
+  --db-naranja: #c46a00;
+  --db-bg:      #f5f5f7;
+  --db-card:    #ffffff;
+  --db-border:  #e4e4e7;
+  --db-text:    #1a1a2e;
+  --db-muted:   #6b7280;
+  --db-radius:  14px;
+  --db-shadow:  0 2px 12px rgba(0,0,0,.07);
+}
+
+.db-root {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ── Área de contenido ── */
+.db-content {
+  padding: 24px;
+  overflow-y: auto;
+  background: var(--db-bg);
+  flex: 1;
+}
+
+/* ── Topbar / filtro ── */
+.db-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 22px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.db-topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--db-text);
+  font-family: "HeyGotcha", serif;
+  letter-spacing: 0.5px;
+}
+
+.db-topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.db-topbar-right label {
+  font-size: 0.82rem;
+  color: var(--db-muted);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.db-topbar-right select {
+  padding: 7px 14px;
+  border-radius: 8px;
+  border: 1.5px solid var(--db-border);
+  background: var(--db-card);
+  font-size: 0.85rem;
+  color: var(--db-text);
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.db-topbar-right select:focus {
+  border-color: var(--db-rojo);
+}
+
+/* ── Bento grid ── */
+.db-bento {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.db-row {
+  display: grid;
+  gap: 16px;
+}
+
+/* Fila KPIs: 4 columnas */
+.db-kpi-row {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+/* Fila gráficas principales: 3 columnas */
+.db-charts-row {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+/* Fila inferior: 2 + 1 */
+.db-bottom-row {
+  grid-template-columns: 2fr 1fr;
+}
+
+/* ── KPI Card ── */
+.db-kpi {
+  background: var(--db-card);
+  border-radius: var(--db-radius);
+  box-shadow: var(--db-shadow);
+  padding: 20px 22px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  border-left: 4px solid var(--accent, var(--db-azul));
+  transition: transform 0.18s;
+}
+
+.db-kpi:hover {
+  transform: translateY(-2px);
+}
+
+.db-kpi-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--accent, var(--db-azul)) 12%, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent, var(--db-azul));
+  flex-shrink: 0;
+}
+
+.db-kpi-val {
+  font-size: 1.7rem;
+  font-weight: 700;
+  color: var(--db-text);
+  line-height: 1;
+  margin: 0 0 4px;
+}
+
+.db-kpi-label {
+  font-size: 0.78rem;
+  color: var(--db-muted);
+  margin: 0;
+  letter-spacing: 0.3px;
+}
+
+/* ── Chart Card ── */
+.db-chart-card {
+  background: var(--db-card);
+  border-radius: var(--db-radius);
+  box-shadow: var(--db-shadow);
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.db-wide {
+  /* ya lo maneja el grid 2fr */
+}
+
+.db-chart-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.db-chart-title {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--db-text);
+  letter-spacing: 0.3px;
+}
+
+.db-chart-body {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 120px;
+}
+
+.db-chart-inner {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+}
+
+/* ── Switch dona/barras ── */
+.db-switch {
+  display: flex;
+  background: #f0f0f2;
+  border-radius: 8px;
+  padding: 2px;
+  gap: 2px;
+}
+
+.db-switch button {
+  padding: 4px 12px;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  background: transparent;
+  color: var(--db-muted);
+  font-weight: 500;
+  transition: background 0.18s, color 0.18s;
+}
+
+.db-switch button.active {
+  background: var(--db-rojo);
+  color: white;
+}
+
+/* ── SVG Charts ── */
+.db-svg-chart {
+  width: 100%;
+  max-height: 160px;
+}
+
+/* ── Leyenda ── */
+.db-legend {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  min-width: 120px;
+}
+
+.db-legend li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  color: var(--db-text);
+}
+
+.db-legend li strong {
+  margin-left: auto;
+  color: var(--db-text);
+  font-size: 0.82rem;
+}
+
+.db-legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ── Error ── */
+.db-error {
+  background: #fff0f0;
+  color: var(--db-rojo);
+  border: 1px solid #f5c6c6;
+  border-radius: 8px;
+  padding: 12px 18px;
+  font-size: 0.85rem;
+  margin-bottom: 16px;
+}
+
+/* ── Empty ── */
+.db-empty {
+  color: var(--db-muted);
+  font-size: 0.83rem;
+  text-align: center;
+}
+
+/* ── Skeleton ── */
+.db-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.db-skel-card,
+.db-skel-chart {
+  border-radius: var(--db-radius);
+  background: linear-gradient(90deg, #e8e8e8 25%, #f5f5f5 50%, #e8e8e8 75%);
+  background-size: 200% 100%;
+  animation: db-shimmer 1.4s infinite;
+}
+
+.db-skel-card  { height: 82px; }
+.db-skel-chart { height: 180px; }
+
+@keyframes db-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ── Responsive ── */
+@media (max-width: 1100px) {
+  .db-kpi-row    { grid-template-columns: repeat(2, 1fr); }
+  .db-charts-row { grid-template-columns: repeat(2, 1fr); }
+  .db-bottom-row { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 700px) {
+  .db-kpi-row    { grid-template-columns: 1fr 1fr; }
+  .db-charts-row { grid-template-columns: 1fr; }
+  .db-bottom-row { grid-template-columns: 1fr; }
+  .db-content    { padding: 14px; }
+  .db-topbar     { flex-direction: column; align-items: flex-start; }
+}
+
+@media (max-width: 400px) {
+  .db-kpi-row { grid-template-columns: 1fr; }
+}
